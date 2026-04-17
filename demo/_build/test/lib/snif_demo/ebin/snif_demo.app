@@ -1,1 +1,0 @@
-{application,snif_demo,[{modules,['Elixir.SnifDemo.BurbleFFT','Elixir.SnifDemo.Loader']},{optional_applications,[]},{applications,[kernel,stdlib,elixir,logger,wasmex]},{description,"snif_demo"},{registered,[]},{vsn,"0.1.0"}]}.
