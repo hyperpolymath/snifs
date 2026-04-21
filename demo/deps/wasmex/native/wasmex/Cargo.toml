@@ -15,11 +15,11 @@ path = "src/lib.rs"
 crate-type = ["dylib"]
 
 [dependencies]
-rand = "0.9.1"
+rand = "0.9.3"
 rustler = { version = "0.37.2", features = ["big_integer", "serde"] }
 tokio = { version = "1.48", features = ["full"] }
 wasi-common = "39.0.1"
-wasmtime = "39.0.1"
+wasmtime = "41.0.4"
 wasmtime-wasi = "39.0.1"
 wasmtime-wasi-http = "39.0.1"
 wat = "1.243.0"
