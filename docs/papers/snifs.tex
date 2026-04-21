@@ -1,0 +1,102 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+
+\title{SNIFs: Safe Native Implemented Functions for the BEAM via WebAssembly Sandboxing}
+\author{Jonathan D. A. Jewell}
+\date{2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Native Implemented Functions (NIFs) in the BEAM virtual machine enable integration with native code, but any fault within a NIF terminates the entire VM. This paper examines a practical approach to enforcing crash isolation by compiling native code to WebAssembly and executing it within a sandboxed runtime.
+
+Using Zig targeting WASM and the \texttt{wasmex} interface, we show that a range of failure modes—including out-of-bounds access, explicit panics, unreachable instructions, integer overflow, and divide-by-zero—are trapped and returned as \texttt{\{:error, reason\}} tuples without terminating the BEAM VM.
+
+We formalise a crash-isolation property under the operational semantics of WebAssembly and validate it empirically using an integration test suite (11/11 tests passing). In addition, the accompanying artifact includes machine-checked verification of core interface invariants (ABI correctness and API type safety) using Idris2 and Lean~4 (7 proofs total).
+
+These results indicate that WebAssembly sandboxing provides a viable mechanism for isolating native faults in BEAM systems.
+\end{abstract}
+
+\section{Introduction}
+
+The BEAM virtual machine provides a robust concurrency model, but Native Implemented Functions (NIFs) bypass many of its safety guarantees. A crash within a NIF typically terminates the entire VM, making NIFs a significant reliability risk.
+
+This work evaluates an approach in which native code is compiled to WebAssembly and executed within a sandboxed runtime. Instead of propagating faults to the host, WebAssembly traps are captured and translated into error values at the BEAM level.
+
+The contribution of this paper is not a new virtual machine or language extension, but a concrete demonstration that existing WebAssembly tooling can be used to enforce crash isolation for NIF-style integrations, together with a reproducible artifact and supporting formalisation.
+
+\section{Architecture}
+
+The SNIF architecture consists of three components:
+
+\begin{itemize}
+  \item Native functions written in Zig and compiled to WebAssembly.
+  \item A WebAssembly runtime (Wasmtime via \texttt{wasmex}) embedded within the BEAM.
+  \item A translation layer mapping traps to BEAM-level error values.
+\end{itemize}
+
+All guest execution occurs within WebAssembly linear memory. Faults such as out-of-bounds access or explicit traps are handled by the runtime and do not directly affect the host process.
+
+A critical requirement is the use of safe compilation settings. In particular, Zig must be compiled with \texttt{-OReleaseSafe}; unsafe modes remove bounds checks and invalidate the safety guarantees relied upon here.
+
+\section{Evaluation}
+
+We evaluate the approach using a set of representative failure modes:
+
+\begin{itemize}
+  \item Out-of-bounds memory access
+  \item Explicit panic
+  \item Unreachable instruction
+  \item Integer overflow
+  \item Divide-by-zero
+\end{itemize}
+
+All failure cases are exercised via integration tests within a BEAM application. In all cases, the WebAssembly runtime traps and returns an error value without terminating the BEAM VM.
+
+Across the test suite, 11/11 integration tests pass under safe compilation settings.
+
+\section{Crash Isolation Property}
+
+We describe the following property informally:
+
+\textbf{Crash Isolation.} For any SNIF call executed via the WebAssembly runtime, any fault in guest execution results in a trapped execution state that is translated into a BEAM-level error value, without terminating the host VM.
+
+This property relies on the trapping semantics of WebAssembly as implemented by the runtime (Wasmtime). Under these semantics, faults in guest execution do not escape the sandboxed environment.
+
+\section{Formal Verification}
+
+The accompanying artifact includes machine-checked verification of key interface invariants using Idris2 and Lean~4.
+
+These proofs cover:
+
+\begin{itemize}
+  \item ABI correctness (data layout and calling conventions)
+  \item Memory safety invariants (pointer validity and bounds constraints)
+  \item API type safety (correctness of SNIF result representations)
+\end{itemize}
+
+All core proofs (7 in total) are complete and mechanically verified. These artifacts provide an executable specification of the SNIF interface, complementing the informal reasoning presented in this paper.
+
+\section{Limitations}
+
+This work relies on the correctness of the WebAssembly runtime. Bugs in the runtime or violations of its safety guarantees would invalidate the isolation property.
+
+Additionally, unsafe compilation modes remove necessary checks and can lead to silent incorrect results rather than traps.
+
+Performance is not evaluated in detail here; the focus is on correctness and isolation rather than throughput.
+
+\section{Conclusion}
+
+This paper demonstrates that WebAssembly sandboxing can be used to enforce crash isolation for NIF-style integrations in the BEAM. By combining safe compilation, runtime trapping semantics, and a translation layer, native faults can be contained and represented as ordinary error values.
+
+The accompanying artifact provides a complete, reproducible implementation together with formal verification of key invariants, supporting the use of this approach in practice.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
