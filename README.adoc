@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 = SNIFs: Safe Native Implemented Functions for the BEAM via WebAssembly Sandboxing
 
+https://doi.org/10.5281/zenodo.19680824
+
 This repository contains:
 (1) the SNIF architecture paper,
 (2) a working BEAM + WASM implementation,
