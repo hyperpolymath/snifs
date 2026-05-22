@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // safe_nif.zig — SNIF demo: Zig functions compiled to WASM for crash-isolated BEAM NIFs.
 //
 // Compile with ReleaseSafe: all safety violations become WASM unreachable traps,
