@@ -1572,8 +1572,9 @@ build-wasm:
         --export=still_alive \
         --name priv/safe_nif_ReleaseFast
 
-# Run Elixir demo tests
-test-demo:
+# Run Elixir demo tests (depends on fresh wasm artifacts so a stale priv/*.wasm
+# can't silently pass the build-mode invariant test against old codegen)
+test-demo: build-wasm
     cd demo && mix deps.get && mix test
 
 # Build PDF paper

@@ -10,9 +10,25 @@
 const std = @import("std");
 
 // Prevent comptime evaluation of runtime values used in failure demos
-var runtime_index: usize = 99;
+var runtime_index: usize = 3;
 var runtime_zero: i32 = 0;
 var runtime_max: i32 = std.math.maxInt(i32);
+
+// Layout-pinned crash demo: extern struct forces declaration-order field
+// placement, so an OOB read at index 3 of `arr` deterministically lands on
+// `canary` rather than indeterminate stack/heap memory. Under ReleaseSafe the
+// bounds check fires before the load; under ReleaseFast the check is stripped
+// and the load returns 0x0BADF00D — a recognisable wrong answer instead of an
+// ambiguous zero that could equally mean "load was DCE'd" or "read 0 from
+// adjacent memory."
+const CrashLayout = extern struct {
+    arr: [3]i32,
+    canary: i32,
+};
+var crash_layout: CrashLayout = .{
+    .arr = .{ 10, 20, 30 },
+    .canary = 0x0BADF00D,
+};
 
 // --- Safe computation (would be a real NIF use-case) ---
 
@@ -42,10 +58,11 @@ export fn checked_add(a: i32, b: i32) i32 {
 
 /// OOB array access via runtime index.
 /// ReleaseSafe: bounds check -> unreachable trap.
-/// ReleaseFast: optimizer removes access, returns 0 silently.
+/// ReleaseFast: bounds check stripped -> reads `crash_layout.canary` adjacent
+/// in linear memory, returns 0x0BADF00D (195948557) silently. The distinctive
+/// value distinguishes real silent corruption from the load being eliminated.
 export fn crash_oob() i32 {
-    const arr = [_]i32{ 10, 20, 30 };
-    return arr[runtime_index]; // runtime_index = 99, OOB
+    return crash_layout.arr[runtime_index]; // runtime_index = 3, one past end
 }
 
 /// Explicit unreachable — always reached at runtime.

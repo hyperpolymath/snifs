@@ -3,8 +3,8 @@ defmodule SnifDemoTest do
   use ExUnit.Case, async: false
   alias SnifDemo.Loader
 
-  @safe  Path.join([__DIR__, "..", "priv", "safe_nif_ReleaseSafe.wasm"])
-  @fast  Path.join([__DIR__, "..", "priv", "safe_nif_ReleaseFast.wasm"])
+  @safe  Path.join([__DIR__, "..", "..", "priv", "safe_nif_ReleaseSafe.wasm"])
+  @fast  Path.join([__DIR__, "..", "..", "priv", "safe_nif_ReleaseFast.wasm"])
 
   # ── Core isolation claim ──────────────────────────────────────────────────
 
@@ -44,13 +44,17 @@ defmodule SnifDemoTest do
 
   # ── ReleaseFast silent-wrong-answer demonstration ────────────────────────
 
-  test "ReleaseFast: oob returns silent 0 instead of trapping — DANGEROUS" do
-    # In ReleaseFast the optimizer removes the OOB access entirely.
-    # The BEAM survives (no crash) but gets a wrong answer with no indication.
-    result = Loader.call(@fast, "crash_oob", [])
-    # Should NOT be {:error, _} — it succeeds silently with garbage
-    assert {:ok, _} = result
-    IO.puts("\n  [ReleaseFast oob result: #{inspect(result)}] — wrong answer, no trap")
+  test "ReleaseFast: oob reads canary from adjacent memory — DANGEROUS" do
+    # In ReleaseFast the bounds check is stripped. The OOB read at index 3 of
+    # `crash_layout.arr` lands on `crash_layout.canary` (0x0BADF00D) placed
+    # adjacent by the extern-struct layout pin. The host gets a plausible-
+    # looking value back with no indication anything is wrong — exactly the
+    # silent-corruption mode SNIFS+ReleaseSafe is sold as eliminating, and
+    # which this assertion proves is reintroduced underneath SNIFS if the
+    # wasm guest gets built with safety checks stripped. A drift in this value
+    # (or a {:error, _} here) means either Zig's data-segment layout changed
+    # or — worse — the ReleaseFast artifact has somehow regained safety checks.
+    assert {:ok, [195_948_557]} = Loader.call(@fast, "crash_oob", [])
   end
 
   test "ReleaseFast: unreachable still traps even in fast mode" do
