@@ -80,6 +80,13 @@ jobs:
       - name: Run demo test suite
         working-directory: demo
         run: |
+          # Install latest Hex/rebar compatible with the Elixir/OTP combo.
+          # Without this, the bundled-with-setup-beam Hex 2.4.2 hits a
+          # `Hex.Repo module does not exist` supervisor error on
+          # Elixir 1.18 / OTP 28 — fixed by installing the runtime-matched
+          # Hex archive before `mix deps.get` tries to use it.
+          mix local.hex --force
+          mix local.rebar --force
           mix deps.get
           mix test --trace
 
