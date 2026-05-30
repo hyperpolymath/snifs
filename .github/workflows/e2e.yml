@@ -74,15 +74,12 @@ jobs:
       - name: Install Erlang/Elixir
         uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
         with:
-          # OTP 27 (not 28) because Hex 2.4.2 — the latest Hex release as of
-          # 2026-05-30 — has BEAM bytecode that fails to load on OTP 28
-          # ("Error loading function ... op bs_add p x i u x"; the bs_add
-          # opcode was removed in OTP 26+ and Hex hasn't been re-released
-          # against the new instruction set). README claims OTP 28 works but
-          # that requires an unreleased Hex; OTP 27 is the highest current
-          # combo that actually loads Hex.
-          otp-version: '27.3'
-          elixir-version: '1.18.0'
+          # OTP 28.3 + Elixir 1.19.4 matches what the rest of the estate
+          # uses (bofj-kitt static-analysis-gate verified working). The
+          # earlier OTP-28 Hex `bs_add` incompat is specific to Elixir 1.18's
+          # Hex archive — Elixir 1.19's archive is unaffected.
+          otp-version: '28.3'
+          elixir-version: '1.19.4'
 
       - name: Run demo test suite
         working-directory: demo

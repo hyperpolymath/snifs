@@ -1,10 +1,10 @@
 # Toolchain versions pinned to match the e2e CI gate.
 # See .github/workflows/e2e.yml — same OTP/Elixir/Zig versions.
 #
-# NOTE on OTP: pinned to 27.3 (NOT 28.x) because Hex 2.4.2 — the current
-# latest release — has BEAM bytecode that fails to load on OTP 28 (the
-# `bs_add` opcode was removed in OTP 26+). Re-evaluate when Hex re-releases.
-elixir 1.18.0
-erlang 27.3
+# OTP 28.3 + Elixir 1.19.4 matches estate-wide convention (bofj-kitt
+# verified working). The earlier OTP-28 Hex bs_add incompat was specific
+# to Elixir 1.18's Hex archive; Elixir 1.19's archive is unaffected.
+elixir 1.19.4
+erlang 28.3
 zig 0.15.1
 rust nightly
