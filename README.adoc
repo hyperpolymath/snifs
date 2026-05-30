@@ -34,7 +34,7 @@ and loading it through `wasmex` converts all guest faults into
 Formal verification:
 7/7 core proofs completed (Idris2 + Lean4), covering ABI correctness and API type safety.
 
-11/11 integration tests pass on OTP 28 / Elixir 1.19.5. Every failure mode
+11/11 integration tests pass on OTP 27.3 / Elixir 1.18.0. Every failure mode
 (OOB array access, `unreachable`, `@panic`, integer overflow, divide-by-zero)
 traps correctly under `ReleaseSafe` compilation. The BEAM survives all of them.
 
@@ -62,7 +62,7 @@ mix deps.get
 mix test
 ----
 
-Requires Elixir 1.15+, OTP 26+ (precompiled wasmex NIF downloaded automatically).
+Requires Elixir 1.15+, OTP 26–27 (precompiled wasmex NIF downloaded automatically). OTP 28 is not yet supported because the current Hex release (2.4.2) ships BEAM bytecode that fails to load on OTP 28 — re-evaluate when Hex publishes a release recompiled for the post-OTP-26 instruction set.
 
 == Rebuilding the WASM
 
