@@ -2289,7 +2289,7 @@ dependencies = [
  "thiserror 2.0.17",
  "tracing",
  "wasmtime 39.0.2",
- "wiggle",
+ "wiggle 39.0.1",
  "windows-sys 0.60.2",
 ]
 
@@ -2397,10 +2397,10 @@ dependencies = [
  "tokio",
  "wasi-common",
  "wasmtime 41.0.4",
- "wasmtime-wasi",
+ "wasmtime-wasi 41.0.4",
  "wasmtime-wasi-http",
  "wat",
- "wiggle",
+ "wiggle 39.0.1",
  "wit-parser 0.240.0",
 ]
 
@@ -2941,9 +2941,9 @@ dependencies = [
 
 [[package]]
 name = "wasmtime-wasi"
-version = "39.0.1"
+version = "39.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "517604b1ce13a56ae3e360217095d7d4db90e84deaa3fba078877c2b80cc5851"
+checksum = "e10672929acc96e8492d8e1e2fb02b69e1f22002aaea08dd366f790dfe11f5e9"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2965,9 +2965,39 @@ dependencies = [
  "tracing",
  "url",
  "wasmtime 39.0.2",
- "wasmtime-wasi-io",
- "wiggle",
+ "wasmtime-wasi-io 39.0.2",
  "windows-sys 0.60.2",
+]
+
+[[package]]
+name = "wasmtime-wasi"
+version = "41.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc2eb9dc95baed3cd86fdfebf9f9f333337eb308bf8bd973e0c7b06d9418c35f"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bitflags",
+ "bytes",
+ "cap-fs-ext",
+ "cap-net-ext",
+ "cap-rand",
+ "cap-std",
+ "cap-time-ext",
+ "fs-set-times",
+ "futures",
+ "io-extras",
+ "io-lifetimes",
+ "rustix 1.1.2",
+ "system-interface",
+ "thiserror 2.0.17",
+ "tokio",
+ "tracing",
+ "url",
+ "wasmtime 41.0.4",
+ "wasmtime-wasi-io 41.0.4",
+ "wiggle 41.0.4",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2989,22 +3019,35 @@ dependencies = [
  "tokio-rustls",
  "tracing",
  "wasmtime 39.0.2",
- "wasmtime-wasi",
- "wasmtime-wasi-io",
+ "wasmtime-wasi 39.0.2",
+ "wasmtime-wasi-io 39.0.2",
  "webpki-roots 0.26.11",
 ]
 
 [[package]]
 name = "wasmtime-wasi-io"
-version = "39.0.1"
+version = "39.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ec66fc94ceb9497d62a3d082bd2cce10348975795516553df4cd89f7d5fc14b"
+checksum = "145a2ae59e73be4a802524946250807bb9aada5e7932de071cba6ee24346b835"
 dependencies = [
  "anyhow",
  "async-trait",
  "bytes",
  "futures",
  "wasmtime 39.0.2",
+]
+
+[[package]]
+name = "wasmtime-wasi-io"
+version = "41.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0b8402f1e04385071fdd96aca97cba995d7376b572e42ce5841d5b6aaf6fa30"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bytes",
+ "futures",
+ "wasmtime 41.0.4",
 ]
 
 [[package]]
@@ -3067,8 +3110,22 @@ dependencies = [
  "thiserror 2.0.17",
  "tracing",
  "wasmtime 39.0.2",
- "wiggle-macro",
+ "wiggle-macro 39.0.1",
  "witx",
+]
+
+[[package]]
+name = "wiggle"
+version = "41.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a69a60bcbe1475c5dc9ec89210ade54823d44f742e283cba64f98f89697c4cec"
+dependencies = [
+ "anyhow",
+ "bitflags",
+ "thiserror 2.0.17",
+ "tracing",
+ "wasmtime 41.0.4",
+ "wiggle-macro 41.0.4",
 ]
 
 [[package]]
@@ -3076,6 +3133,20 @@ name = "wiggle-generate"
 version = "39.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8a98d02cd1ba87ca6039f28f4f4c0b53a9ff2684f5f2640f471af9bc608b9d9"
+dependencies = [
+ "anyhow",
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "witx",
+]
+
+[[package]]
+name = "wiggle-generate"
+version = "41.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21f3dc0fd4dcfc7736434bb216179a2147835309abc09bf226736a40d484548f"
 dependencies = [
  "anyhow",
  "heck",
@@ -3094,7 +3165,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
- "wiggle-generate",
+ "wiggle-generate 39.0.1",
+]
+
+[[package]]
+name = "wiggle-macro"
+version = "41.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fea2aea744eded58ae092bf57110c27517dab7d5a300513ff13897325c5c5021"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "wiggle-generate 41.0.4",
 ]
 
 [[package]]
