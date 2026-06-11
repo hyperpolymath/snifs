@@ -10,7 +10,6 @@
 # affected build.
 
 name: E2E + Aspect + Bench
-
 on:
   push:
     branches: [main, master, develop]
@@ -29,13 +28,10 @@ on:
       - 'Justfile'
       - '.github/workflows/e2e.yml'
   workflow_dispatch:
-
 permissions: read-all
-
 concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   # ─── Build-mode invariant gate ─────────────────────────────────────
   # Builds the wasm guest fresh from source (defeating any stale committed
@@ -146,37 +142,37 @@ jobs:
   #     - run: cabal build all
   #     - run: bash tests/integration-test.sh
 
-  # ─── Aspect Tests ──────────────────────────────────────────────────
-  # Cross-cutting concerns: thread safety, ABI contracts, SPDX, dangerous patterns
-  # Uncomment and customise:
+# ─── Aspect Tests ──────────────────────────────────────────────────
+# Cross-cutting concerns: thread safety, ABI contracts, SPDX, dangerous patterns
+# Uncomment and customise:
 
-  # aspect-tests:
-  #   name: Aspect — Architectural Invariants
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 10
-  #   steps:
-  #     - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-  #     - run: bash tests/aspect_tests.sh
+# aspect-tests:
+#   name: Aspect — Architectural Invariants
+#   runs-on: ubuntu-latest
+#   timeout-minutes: 10
+#   steps:
+#     - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+#     - run: bash tests/aspect_tests.sh
 
-  # ─── Benchmarks ────────────────────────────────────────────────────
-  # Performance regression detection. Uncomment matching stack:
+# ─── Benchmarks ────────────────────────────────────────────────────
+# Performance regression detection. Uncomment matching stack:
 
-  ## === RUST BENCH ===
-  # benchmarks:
-  #   name: Bench — Performance Regression
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   steps:
-  #     - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-  #     - uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7  # stable
-  #     - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5  # v2
-  #     - run: cargo bench 2>&1 | tee /tmp/bench-results.txt
-  #     - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
-  #       if: always()
-  #       with:
-  #         name: benchmark-results
-  #         path: /tmp/bench-results.txt
-  #         retention-days: 30
+## === RUST BENCH ===
+# benchmarks:
+#   name: Bench — Performance Regression
+#   runs-on: ubuntu-latest
+#   timeout-minutes: 15
+#   steps:
+#     - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+#     - uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7  # stable
+#     - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5  # v2
+#     - run: cargo bench 2>&1 | tee /tmp/bench-results.txt
+#     - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+#       if: always()
+#       with:
+#         name: benchmark-results
+#         path: /tmp/bench-results.txt
+#         retention-days: 30
 
   ## === ZIG BENCH ===
   # benchmarks:
@@ -190,15 +186,15 @@ jobs:
   #         version: 0.15.0
   #     - run: cd ffi/zig && zig build bench
 
-  # ─── Readiness (CRG) ──────────────────────────────────────────────
-  # Component Readiness Grade: D (runs) → C (correct) → B (edge cases)
+# ─── Readiness (CRG) ──────────────────────────────────────────────
+# Component Readiness Grade: D (runs) → C (correct) → B (edge cases)
 
-  # readiness:
-  #   name: Readiness — Grade D/C/B
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 10
-  #   steps:
-  #     - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-  #     - uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7  # stable
-  #     - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5  # v2
-  #     - run: cargo test --test readiness -- --nocapture
+# readiness:
+#   name: Readiness — Grade D/C/B
+#   runs-on: ubuntu-latest
+#   timeout-minutes: 10
+#   steps:
+#     - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+#     - uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7  # stable
+#     - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5  # v2
+#     - run: cargo test --test readiness -- --nocapture

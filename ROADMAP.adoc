@@ -1,22 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
-= YOUR Template Repo Roadmap
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= SNIFs Roadmap
+:toc: preamble
 
-== Current Status
+**The Universal Pattern Hub for Safe Native Interfaces**
 
-Initial development phase.
+== v0.1.0 - BEAM Isolation (COMPLETED)
+* [x] Zig to WASM compilation patterns.
+* [x] BEAM fault trapping via `wasmex`.
 
-== Milestones
-
-=== v0.1.0 - Foundation
-* [ ] Core functionality
-* [ ] Basic documentation
-* [ ] CI/CD pipeline
-
-=== v1.0.0 - Stable Release
-* [ ] Full feature set
-* [ ] Comprehensive tests
-* [ ] Production ready
-
-== Future Directions
-
-_To be determined based on community feedback._
+== v0.2.0 - Multi-Language Patterns (PLANNED)
+* [ ] **Rust/SPARK Pattern:** Standardizing formally verified Rust components as SNIFs.
+* [ ] **The 'Groove' Bridge:** Implementing Groove Protocol capability negotiation for WASM sandboxes.
+* [ ] **Unified Documentation:** Centralizing Safe FFI standards for the entire estate.

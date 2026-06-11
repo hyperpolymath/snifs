@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 defmodule SnifDemo.Loader do
   @moduledoc """
   Loads a WASM module via wasmex and calls exported functions.

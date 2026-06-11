@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 // safe_nif.zig — SNIF demo: Zig functions compiled to WASM for crash-isolated BEAM NIFs.
 //
 // Compile with ReleaseSafe: all safety violations become WASM unreachable traps,
