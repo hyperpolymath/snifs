@@ -35,7 +35,7 @@ and loading it through `wasmex` converts all guest faults into
 Formal verification:
 7/7 core proofs completed (Idris2 + Lean4), covering ABI correctness and API type safety.
 
-11/11 integration tests pass on OTP 28 / Elixir 1.19.5. Every failure mode
+11/11 integration tests pass on OTP 28.3 / Elixir 1.19.4 (verified estate-wide via `bofj-kitt/static-analysis-gate` runs that successfully load Hex 2.4.2 on this combo). The OTP 27.3 / Elixir 1.18.0 combo also passes. The earlier-flagged OTP 28 + Elixir 1.18 incompatibility (Hex `bs_add` opcode) is specific to that Elixir minor — Elixir 1.19's Hex archive is unaffected. Every failure mode
 (OOB array access, `unreachable`, `@panic`, integer overflow, divide-by-zero)
 traps correctly under `ReleaseSafe` compilation. The BEAM survives all of them.
 
@@ -63,7 +63,7 @@ mix deps.get
 mix test
 ----
 
-Requires Elixir 1.15+, OTP 26+ (precompiled wasmex NIF downloaded automatically).
+Requires Elixir 1.15+, OTP 26+ (precompiled wasmex NIF downloaded automatically). The OTP 28 + Elixir 1.18 combination is unsupported (the Elixir-1.18-specific Hex archive fails to load on OTP 28 with `bs_add` BEAM bytecode errors), but OTP 28.3 + Elixir 1.19.4 works fine. Either OTP 27.3 + Elixir 1.18 or OTP 28.3 + Elixir 1.19 is a known-good combo.
 
 == Rebuilding the WASM
 

@@ -17,6 +17,8 @@ Thumbs.db
 /build/
 /dist/
 /out/
+/priv/*.wasm
+/zig-out/
 
 # Dependencies
 /node_modules/

@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+<!-- Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk> -->
 <p align="center">
   <img width="300" src="./logo.svg" alt="Wasmex logo">
 </p>

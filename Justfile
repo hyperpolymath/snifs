@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
+// Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # RSR Standard Justfile Template
@@ -1541,8 +1542,11 @@ handover-model path=".":
 handover-human path=".":
     @./session/dispatch.sh handover human "{{path}}"
 
-# Build WASM binaries from Zig source
+# Build WASM binaries from Zig source.
+# Zig 0.15+ forbids folder separators in --name, so name is just the basename
+# and -femit-bin controls the output path. priv/ is created if missing.
 build-wasm:
+    mkdir -p priv
     zig build-exe zig/src/safe_nif.zig \
         -target wasm32-freestanding \
         -OReleaseSafe \
@@ -1555,7 +1559,8 @@ build-wasm:
         --export=crash_overflow \
         --export=crash_div_zero \
         --export=still_alive \
-        --name priv/safe_nif_ReleaseSafe
+        --name safe_nif_ReleaseSafe \
+        -femit-bin=priv/safe_nif_ReleaseSafe.wasm
     zig build-exe zig/src/safe_nif.zig \
         -target wasm32-freestanding \
         -OReleaseFast \
@@ -1568,10 +1573,12 @@ build-wasm:
         --export=crash_overflow \
         --export=crash_div_zero \
         --export=still_alive \
-        --name priv/safe_nif_ReleaseFast
+        --name safe_nif_ReleaseFast \
+        -femit-bin=priv/safe_nif_ReleaseFast.wasm
 
-# Run Elixir demo tests
-test-demo:
+# Run Elixir demo tests (depends on fresh wasm artifacts so a stale priv/*.wasm
+# can't silently pass the build-mode invariant test against old codegen)
+test-demo: build-wasm
     cd demo && mix deps.get && mix test
 
 # Build PDF paper

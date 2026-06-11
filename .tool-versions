@@ -1,10 +1,10 @@
-# Uncomment and customize for your project
-# rust nightly
-# just 1.40.0
-# nickel 1.10.0
-# gleam 1.8.0
-# elixir 1.18.0
-# erlang 27.2
-# zig 0.14.0
-# idris2 0.7.0
+# Toolchain versions pinned to match the e2e CI gate.
+# See .github/workflows/e2e.yml — same OTP/Elixir/Zig versions.
+#
+# OTP 28.3 + Elixir 1.19.4 matches estate-wide convention (bofj-kitt
+# verified working). The earlier OTP-28 Hex bs_add incompat was specific
+# to Elixir 1.18's Hex archive; Elixir 1.19's archive is unaffected.
+elixir 1.19.4
+erlang 28.3
+zig 0.15.1
 rust nightly
