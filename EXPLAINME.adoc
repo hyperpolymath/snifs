@@ -1,78 +1,47 @@
 // SPDX-License-Identifier: MPL-2.0
-// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-= RSR Template Repo - Explainme
-image:https://img.shields.io/badge/License-MPL_2.0-blue.svg[License: MPL-2.0,link="https://opensource.org/licenses/MPL-2.0"]
-
-:toc:
+// Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= SNIFs — EXPLAINME
+:toc: preamble
 :icons: font
 
-This file explains how the key template claims map to real files.
+This file provides code-level evidence and implementation details for the SNIF (Safe Native Implemented Functions) architecture.
 
-== Central Session Protocol Authority
+== Claim-to-implementation map
 
-Claim:
-Session protocols are centrally maintained and not duplicated in this template.
+=== Crash Isolation
 
-How this is implemented:
+[quote, README.adoc]
+____
+Any crash in a NIF normally kills the entire BEAM VM... WebAssembly sandboxing provides genuine crash isolation.
+____
 
-* The local dispatcher (`session/dispatch.sh`) maps canonical commands to central
-  protocol paths in `standards/session-management-standards`.
-* Local files (`session/custom-checks.k9`, `session/local-hooks.sh`,
-  `coordination.k9`) are integration-only.
+How this is implemented::
+We use `wasmex` to load Zig-compiled WASM modules. The `demo/` folder contains tests that trigger null-pointer dereferences and overflows in the Zig guest; the host Elixir process receives a standard error tuple instead of a segmentation fault.
 
-Caveat:
+=== Deterministic Safety
 
-* If `SESSION_STANDARDS_DIR` is unset and no adjacent standards checkout exists,
-  the dispatcher records the command but cannot resolve central checklist paths.
+[quote, README.adoc]
+____
+Always compile Zig WASM with -OReleaseSafe.
+____
 
-== Canonical Command Surface
+How this is implemented::
+The `Justfile` build recipes enforce `-OReleaseSafe` for all `priv/*.wasm` artifacts, ensuring that bounds checks are preserved in the binary.
 
-Claim:
-Template bindings align to one canonical command model.
+== Relationship to Groove/Cleave
 
-How this is implemented:
+SNIFs provide the **Physical Cleave Surface**. While the **Groove Protocol** defines "how services talk" (communication), the SNIF architecture defines **"how they touch"** (integration). By sandboxing native code in WASM, we ensure that the "join" between high-performance logic and the safe host environment is mathematically isolated and safe to "split."
 
-* `Justfile` provides thin aliases (`intake-repo`, `checkpoint-change`,
-  `verify-maintenance`, `verify-substantial`, `verify-release`, `close-planned`,
-  `close-urgent`, `recover-repo`, `handover-*`).
-* Every alias calls `session/dispatch.sh` with canonical verb-object pairs.
+== Repository Future: The Universal Pattern Hub
 
-Caveat:
+Per the v0.5 reposystem roadmap, this repository is transitioning from an Elixir-only research project into the **Universal Pattern Hub** for all Safe Native Interfaces across the estate (Rust/SPARK, Zig, and Ada).
 
-* Recipes are wrappers only. They do not replace protocol content from
-  the central standards repo.
+== Evidence Index
 
-== Runtime State Is Local
-
-Claim:
-Session state is per-repository runtime output, not standards text.
-
-How this is implemented:
-
-* `session/dispatch.sh` writes command and continuity-core capture stubs to
-  `.session/LAST-CANONICAL-COMMAND.md` in the target repository path.
-
-Caveat:
-
-* Runtime files are intentionally lightweight and require human/agent completion.
-
-== Template Token Policy
-
-Claim:
-Placeholders are explicit template content until initialization.
-
-How this is implemented:
-
-* `README.adoc` and bootstrap recipes keep `{{TOKEN}}` placeholders visible.
-* `just init` performs token replacement.
-
-Caveat:
-
-* Uninitialized placeholders must not be treated as project-specific truth.
-
-
-== License
-
-This project is licensed under the Mozilla Public License, v. 2.0. See the `LICENSE` file for details.
-
-SPDX-License-Identifier: MPL-2.0
+[cols="2,3", options="header"]
+|===
+| Path | Proves
+| `zig/src/safe_nif.zig` | Implementation of trapped failure modes.
+| `demo/test/snif_test.exs` | Integration tests verifying BEAM survival.
+| `manifest.scm` | Guix environment for reproducible WASM builds.
+|===
