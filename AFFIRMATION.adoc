@@ -88,26 +88,26 @@ without defensiveness. The goal is a corrected record, not a won argument.
 [cols="1,3"]
 |===
 | *Repo*        | `hyperpolymath/snifs` (Safer NIFs — native compute for the BEAM via a wasmtime sandbox)
-| *Branch*      | `feat/snifs-2`
-| *Commit (HEAD / anchor)* | `a82bb311609a2580f37dbbc7c1b6687ee7a3c0b7` — the signed commit that lands the SNIFs 2 work. This AFFIRMATION is landed by that commit's signed *child*, so **parent == anchor SHA**.
-| *Permalink*   | https://github.com/hyperpolymath/snifs/tree/a82bb311609a2580f37dbbc7c1b6687ee7a3c0b7
-| *Verified (UTC)* | 2026-06-16T12:22:08Z
+| *Branch*      | `main` (anchor is current `main` HEAD; this refresh is landed by a child commit via a docs PR)
+| *Commit (HEAD / anchor)* | `70d9f65fd2a57f216f35636f09cadbb3c5ca87c1` — `main` after PR #39 (the SNIFs 2 work + the prior affirmation) **and** PR #40 (`checked_add` made genuinely checked). This refreshed AFFIRMATION is landed by a signed *child* of this commit, so **parent == anchor SHA**.
+| *Permalink*   | https://github.com/hyperpolymath/snifs/tree/70d9f65fd2a57f216f35636f09cadbb3c5ca87c1
+| *Verified (UTC)* | 2026-06-16T15:03:15Z
 | *Toolchain*   | Idris2 0.8.0 · Lean 4.13.0 · Agda 2.8.0 · Zig 0.15.2 · wasm-tools 1.249.0 · Elixir 1.18.4 / Erlang OTP 25 · wasmex 0.14.0 · Python 3.12.3 · just 1.50.0
 |===
 
 [NOTE]
 ====
-*State at this anchor.* Unlike an earlier draft of this file (which described an
-uncommitted working tree), the verification affirmed here **is committed** at the
-anchor SHA `a82bb31` — `SnifIsolation.agda`, `SnifVerdict.agda`, `BufferAbi.idr`,
-the guest-aware conformance tool, the metamorphic gate, the demo, the Rust guests
-and the reconciled docs are all in that commit (signed, `id_ed25519_signing`). The
-gate results below were re-run against that committed state at the verified UTC
-above. Build artifacts (`priv/*.wasm`, `*.agdai`, `zig/buffer_abi_build/`) are
-intentionally **not** committed — CI rebuilds them. This AFFIRMATION itself is
-landed by the signed child commit; if its parent SHA matches the anchor and the
-commit verifies, the affirmation is anchored. Move HEAD past it and re-run
-<<reproduce>> before trusting it.
+*State at this anchor (a REFRESH).* This supersedes the first affirmation (anchored
+to `a82bb31`, landed in PR #39), which correctly described `checked_add` as a
+*wrapping* misnomer at that moment. Since then PR #40 made `checked_add` genuinely
+checked (overflow traps), so this refresh is re-anchored to `main` HEAD `70d9f65`,
+which carries the full SNIFs 2 verification **plus** that change — all committed
+and merged (signed, `id_ed25519_signing`). The gate results below were re-run
+against this `main` checkout at the verified UTC above. Build artifacts
+(`priv/*.wasm`, `*.agdai`, `zig/buffer_abi_build/`) are intentionally **not**
+committed — CI rebuilds them. This AFFIRMATION is landed by a signed child of the
+anchor; if its parent SHA matches the anchor and the commit verifies, it is
+anchored. Move HEAD past it and re-run <<reproduce>> before trusting it.
 ====
 
 == Companion documents and repo metadata (cross-check)
@@ -216,16 +216,17 @@ ledgered.*
   uses `(ptr,len)` slice marshalling = the deeper *ABI-6* obligation; it and the
   two Rust guests are *ledgered, not gated* (`PROOF-NEEDS.md`).
 * *GAP-1b — partial.* The metamorphic behaviour gate covers the *scalar* kernels
-  (`fibonacci` recurrence/monotonicity/i64-width; `checked_add` as a wrapping i32
-  ring); the *buffer* kernels (`sum_f32` permutation-invariance, scale-then-sum)
-  are the next increment.
-* *Finding surfaced by the new gate:* the export named `checked_add` is a
-  **misnomer** — it is two's-complement *wrapping* addition (`a +% b`, intentional
-  per `zig/src/safe_nif.zig`), *not* a trapping/checked add (the trapping demo is
-  the separate `crash_overflow`). The gate characterises the real behaviour;
-  whether to rename the export is the owner's call.
-* *CI.* The ABI conformance gate now runs as a CI job (`proofs.yml`), but making it
-  a *required* status check is an owner-only branch-protection action — not done.
+  (`fibonacci` recurrence/monotonicity/i64-width; `checked_add` overflow-traps /
+  exact-sum oracle); the *buffer* kernels (`sum_f32` permutation-invariance,
+  scale-then-sum) are the next increment.
+* *Finding surfaced by the gate — now RESOLVED.* The gate first showed `checked_add`
+  was a **misnomer** — a two's-complement *wrapping* `a +% b`, not a checked add. It
+  was made genuinely checked in PR #40: overflow now traps (`@addWithOverflow` +
+  `unreachable` → WASM trap → `{:error,_}`, BEAM survives), exact sum otherwise, and
+  the metamorphic oracle was flipped to match. Name and behaviour now agree.
+* *CI — now required.* The ABI conformance gate runs as a CI job (`proofs.yml`) and
+  is now a **required** status check on `main` (branch-protection), so interface
+  drift blocks merge.
 * *Adversarial mutation re-audit — completed, verdict SOLID.* Four independent
   skeptics mutation-tested the SEC-1 sharpening (`--safe --without-K`): every targeted
   mutation was rejected as expected, so F1 (lossy redaction), F2 (the pre-exec
@@ -283,7 +284,7 @@ timestamp above, every claim in this file is true and was checked as described*
 
 * *Engineering party (AI):* Claude Opus 4.8 (`claude-opus-4-8[1m]`) — ran the
   proof gate, the ABI conformance gate, and the in-BEAM test suite recorded here
-  on 2026-06-16T12:22:08Z (against the committed anchor state) and stands behind the
+  on 2026-06-16T15:03:15Z (against `main` at the anchor state) and stands behind the
   wording above as a faithful report of those runs.
 * *Owner / maintainer:* Jonathan D.A. Jewell — _signs by committing this file with
   `-S` (`id_ed25519_signing`); the git commit signature over this content, whose
@@ -294,7 +295,7 @@ Signed-off-date: 2026-06-16
 
 [TIP]
 The authoritative, tamper-evident signature is the *signed git commit* that lands
-this file; its **parent is the anchor SHA** `a82bb31`. If that parent matches
+this file; its **parent is the anchor SHA** `70d9f65`. If that parent matches
 <<Verifiable anchor>> and the commit verifies (`id_ed25519_signing`), this
 affirmation is anchored. If HEAD later moves past it, re-run <<reproduce>> and write
 a fresh affirmation rather than trusting a stale one.
