@@ -1,130 +1,83 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-// Template: QUICKSTART-MAINTAINER.adoc — packaging, deploying, and maintaining
-// Replace rsr-template-repo, {{PACKAGE_NAME}}, {{DEPS}} with actuals
-= rsr-template-repo — Quick Start for Platform Maintainers
+= snifs — Quick Start for Maintainers
 :toc:
 :toclevels: 2
 
 == Overview
 
-This guide covers packaging, deploying, and maintaining rsr-template-repo for
-distribution on your platform.
+This guide covers building, verifying, packaging, and releasing snifs. snifs is a
+research + reference repository (paper + BEAM/WASM implementation + proofs), so
+"release" means: green proofs and tests, a rebuilt paper, a signed container bundle,
+and a tagged version on Zenodo — not shipping an installable end-user application.
 
 == Runtime Dependencies
 
-{{DEPS}}
+* Elixir 1.15+ on OTP 25+ (host); `wasmex` → `wasmtime` (sandbox).
+* Zig 0.15+ and a Rust→wasm32 toolchain (to rebuild guests).
+* Idris2 / Lean4 / Agda (to re-check proofs); `just`; Guix or Nix.
 
 == Build from Source
 
 [source,bash]
 ----
-git clone https://github.com/hyperpolymath/rsr-template-repo.git
-cd rsr-template-repo
-just build-release
+git clone https://github.com/hyperpolymath/snifs.git
+cd snifs
+just build-wasm          # guests → priv/*.wasm (ReleaseSafe)
+just build-release       # release build
 ----
 
-Output: `{{BUILD_OUTPUT_PATH}}`
-
-== Packaging
-
-=== Guix
+== Pre-Release Gate
 
 [source,bash]
 ----
-guix build -f guix.scm
+just quality             # fmt-check + lint + test
+just proof-check-all     # all proofs check
+just abi-conformance     # model ↔ binary ABI drift gate
+just assail              # panic-attacker security scan
+just deps-audit          # dependency vulnerability audit
+just sbom                # generate the software bill of materials
 ----
 
-=== Nix
+== The Paper
 
 [source,bash]
 ----
-nix build
+just paper               # build docs/whitepapers/academic/snif.pdf
 ----
 
-=== Container (Stapeln)
+== Container (cerro-torre pipeline)
 
 [source,bash]
 ----
-just stapeln-export    # Generates Containerfile
-podman build -t rsr-template-repo .
+just container-build     # build the image
+just container-verify    # verify the compose configuration
+just container-sign      # build + pack + sign + verify the bundle
+just container-push      # push the signed bundle to the registry
 ----
 
-=== Manual Package
+The container build keys off the repo-root `Containerfile`; the
+`dogfood-gate` workflow checks for it there — do not relocate it.
+
+== Cutting a Release
 
 [source,bash]
 ----
-just install --prefix=/usr/local
+just changelog-preview   # preview unreleased changelog entries (no write)
+just changelog           # generate CHANGELOG.md with git-cliff
+just release-tag <version>
 ----
 
-Files installed:
-
-[cols="1,2"]
-|===
-| Path | Contents
-
-| `$PREFIX/bin/`
-| Executables
-
-| `$PREFIX/share/{{PACKAGE_NAME}}/`
-| Data files, assets
-
-| `$PREFIX/share/doc/{{PACKAGE_NAME}}/`
-| Documentation
-
-| `$PREFIX/share/applications/`
-| .desktop file (Linux, if GUI)
-
-| `$PREFIX/share/man/man1/`
-| Man pages
-|===
-
-== Configuration
-
-Default config location: `$XDG_CONFIG_HOME/{{PACKAGE_NAME}}/config.toml`
-
-Fallback: `$HOME/.config/{{PACKAGE_NAME}}/config.toml`
-
-== Health Checks
-
-[source,bash]
-----
-just doctor            # Full diagnostic
-just run --version   # Version check
-just run --selftest  # Built-in self-test
-----
-
-== Updating
-
-[source,bash]
-----
-git pull
-just build-release
-just install --prefix=/usr/local
-----
-
-Or via OPSM: `opsm update {{PACKAGE_NAME}}`
+Tags and the Zenodo DOI are how downstream consumers cite a fixed version (see the
+`Citation` block in `README.adoc`).
 
 == Security Notes
 
-* License: MPL-2.0 (Palimpsest License)
-* All dependencies SHA-pinned
-* `panic-attacker` scan results: link:INSTALL-SECURITY-REPORT.adoc[]
-* OpenSSF Scorecard: see badge in README
-
-== Multi-Instance Deployment
-
-For deploying multiple instances (e.g., different users or tenants):
-
-[source,bash]
-----
-just install --prefix=/opt/{{PACKAGE_NAME}}-instance1 --config=/etc/{{PACKAGE_NAME}}/instance1.toml
-just install --prefix=/opt/{{PACKAGE_NAME}}-instance2 --config=/etc/{{PACKAGE_NAME}}/instance2.toml
-----
-
-Each instance has isolated config, data, and logs.
+* License: MPL-2.0.
+* Dependencies SHA-pinned; `just deps-audit` + `just sbom` gate each release.
+* Security policy and disclosure process: link:SECURITY.md[SECURITY.md].
 
 == Reporting Issues
 
-* Upstream: https://github.com/hyperpolymath/rsr-template-repo/issues
-* With diagnostic: `just help-me` (pre-fills context)
+* Upstream: https://github.com/hyperpolymath/snifs/issues
+* With diagnostic context: `just help-me`
