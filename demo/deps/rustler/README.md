@@ -1,5 +1,3 @@
-<!-- SPDX-License-Identifier: MPL-2.0 -->
-<!-- Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk> -->
 # Rustler
 
 [![Module Version](https://img.shields.io/hexpm/v/rustler.svg)](https://hex.pm/packages/rustler)
