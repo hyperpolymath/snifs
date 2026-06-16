@@ -3,6 +3,8 @@
 // SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 = SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing
+:toc: preamble
+:icons: font
 
 image:https://img.shields.io/badge/OpenSSF-Best_Practices-green?logo=opensourcesecurity[OpenSSF Best Practices,link="https://www.bestpractices.dev/en/projects/new?repo_url=https://github.com/hyperpolymath/snifs"]
 image:https://img.shields.io/badge/License-MPL_2.0-blue.svg[License: MPL-2.0,link="https://opensource.org/licenses/MPL-2.0"]
@@ -177,6 +179,15 @@ Requires Zig 0.15+.
 == Paper
 
 `docs/whitepapers/academic/snif.pdf` — also available on Zenodo (DOI pending).
+
+== Documentation
+
+* link:EXPLAINME.adoc[EXPLAINME] — claim-to-implementation evidence and honest caveats.
+* link:PROOF-STATUS.md[Proof status] — what is proven, what is tested, what is trusted.
+* link:CONTRIBUTING.md[Contributing]
+* link:SECURITY.md[Security policy]
+* link:CHANGELOG.md[Changelog]
+* link:docs/whitepapers/academic/snif.pdf[Paper (PDF)]
 
 == License
 
