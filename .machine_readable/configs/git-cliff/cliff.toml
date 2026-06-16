@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-# Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} (hyperpolymath) <{{AUTHOR_EMAIL}}>
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # git-cliff configuration for conventional commit changelog generation.
 # https://git-cliff.org/docs/configuration
@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # https://keats.github.io/tera/docs/#introduction
 body = """
 {%- macro remote_url() -%}
-  https://github.com/hyperpolymath/snif
+  https://github.com/hyperpolymath/snifs
 {%- endmacro -%}
 
 {% if version -%}
@@ -57,7 +57,7 @@ body = """
 # Template for the changelog footer
 footer = """
 {%- macro remote_url() -%}
-  https://github.com/hyperpolymath/snif
+  https://github.com/hyperpolymath/snifs
 {%- endmacro -%}
 
 {% for release in releases -%}

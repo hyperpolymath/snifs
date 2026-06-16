@@ -6,7 +6,8 @@
 uuid = "a5ea1382-a34c-5334-8a46-a2ebe904c810"
 primary-forge = "github"
 primary-owner = "hyperpolymath"
-canonical-name = "rsr-template-repo"
+canonical-name = "snifs"
+# prefixed-name + [clade] block pending the real gv-clade-index entry for snifs
 prefixed-name = "rm-rsr-template-repo"
 
 [clade]
@@ -16,11 +17,11 @@ assigned = "2026-03-16"
 rationale = ""
 
 [forges]
-github = "hyperpolymath/rsr-template-repo"
-gitlab = "hyperpolymath/rsr-template-repo"
-bitbucket = "hyperpolymath/rsr-template-repo"
+github = "hyperpolymath/snifs"
+gitlab = "hyperpolymath/snifs"
+bitbucket = "hyperpolymath/snifs"
 
 [lineage]
 type = "standalone"
-parent = "RSR template — scaffold for new repos"
+parent = "rsr-template-repo (bootstrapped from the RSR standard scaffold)"
 born = "2026-03-16"

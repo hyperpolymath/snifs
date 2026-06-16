@@ -2,7 +2,7 @@
 ;; Ecosystem position and relationships
 (ecosystem
   (version "1.0.0")
-  (name "snif")
+  (name "snifs")
   (type "library")
-  (purpose "{{REPO_DESCRIPTION}}")
+  (purpose "Safer NIFs: crash-isolated native interfaces for the BEAM via WebAssembly sandboxing.")
   (related-projects))
