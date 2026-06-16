@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: MPL-2.0
+# Bustfile — design-aetiology / "bust" contract for snifs
+# Author: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+#
+# Paired runner: bust.ncl   (NOT YET PRESENT — paired .ncl runners are an
+#                            estate-wide gap; cf the Adjustfile contractile-sync
+#                            check. Do not assume a runner exists.)
+# Verb:          bust
+#
+# Semantics: BUST is about *broken* — the slang "damn, this thing is bust".
+#            It records WHY things break (or nearly broke), cause-first, as
+#            design aetiology — causal help/error/removal, NOT a bandaid that
+#            suppresses the symptom. (Sibling: DUST = exnovation, the clean
+#            reduction-to-dust / deliberate removal of a thing.)
+# Run with:  bust check    (list failure modes + recovery status)
+# Fix with:  bust fix      (apply the causal recovery where deterministic; advisory otherwise)
+
+@abstract:
+The snifs Bustfile in two disjoint halves.
+
+  ## Failure Modes  — OPEN, actionable defect contracts: a class that CAN break,
+  each pairing a detection probe with a causal recovery. This is the half a
+  `bust` runner / k9 gate would drill (declared -> drilled -> verified | failing).
+
+  ## Near-Hit Cases — CLOSED, non-actionable recognition records: something that
+  COULD have bitten but DID NOT, written down with its aetiology so future work
+  recognises the same shape rather than re-stumbling into it. A near-hit is NOT a
+  defect, has no recovery to drill, and must never be auto-promoted into a Failure
+  Mode (that would invent an open issue from a non-issue). It only graduates by an
+  explicit human decision.
+@end
+
+## Failure Modes
+
+### releasefast-guest-silent-wrong-answers
+- description: A SNIF guest built with `-Doptimize=ReleaseFast` (or `ReleaseSmall`) strips Zig's runtime safety traps (overflow, bounds, unreachable). At the wasm32-freestanding guest boundary the same fault that should TRAP becomes undefined behaviour — the guest returns a plausible-but-wrong value across the buffer ABI and the BEAM host accepts a silently corrupt answer. There is no crash to observe.
+- cause: optimisation-for-speed removes the only mechanism (safety traps) that surfaces ABI/arithmetic violations at the cleave surface; ReleaseSafe keeps the trap and converts the same bug into an *observable* guest trap the host catches as `{:error, _}`.
+- probe: ! grep -qE 'optimize *= *\.(ReleaseFast|ReleaseSmall)' zig/src/*.zig build.zig 2>/dev/null  # shipped guest must be ReleaseSafe
+- probe: just abi-conformance  # + a differential corpus: ReleaseSafe vs ReleaseFast must AGREE on edge inputs — divergence == this mode firing
+- recovery: build/ship the guest `-OReleaseSafe` (traps preserved); CI-gate so a ReleaseFast artifact cannot ship; on a field wrong-answer, rebuild ReleaseSafe and replay the differential corpus to localise the trapping input.
+- severity: critical
+- status: declared
+
+### wasmex-nif-guest-load-failure
+- description: The host-side wasmex NIF, or the `.wasm` guest it loads, fails to instantiate — a missing/renamed export, ABI/version skew between the Idris2-verified model and the real Zig exports, wrong wasm target, or a NIF that won't link into the BEAM. The Elixir call surfaces `{:error, _}` (or a NIF load crash) instead of a working SNIF.
+- cause: the guest export set drifted from the verified ABI (`verification/proofs/idris2/ABI/*`), or the guest was built for the wrong target / missing an export, so wasmex cannot bind the expected interface at instantiation — boundary-erosion / ABI-drift, exactly the class `abi_conformance.py` guards.
+- probe: just abi-conformance  # signature drift gate (safe_nif + buffer_abi vs Foreign.idr / BufferAbi.idr)
+- probe: cd demo && mix test    # host-side instantiate + call; must not be {:error, _} for the happy path
+- recovery: re-sync exports to the Idris2 ABI model (realign safe_nif.zig + buffer_abi.zig against Foreign.idr / BufferAbi.idr), rebuild for wasm32-freestanding, re-run `just abi-conformance` until green, then re-instantiate.
+- severity: critical
+- status: declared
+
+## Near-Hit Cases
+
+# RECOGNITION LEDGER — read, do not drill. Entries here are NOT defects and NOT
+# merge-gated. A `bust` runner / k9 gate binds ONLY to "## Failure Modes" above.
+# Do not migrate these into Failure Modes; promotion is a human decision via the
+# entry's `graduates_to_failure_mode_if:` trip-condition.
+
+### zig-0.15.2-opaque-with-fields-template-rot
+- kind: near-hit
+- status: recognised
+- not_an_issue: true
+- class: toolchain            # (extends the runner's failure-class enum; near-hits do not bind the runner)
+- surfaced_by: cross-repo AFFIRMATION signal, 2026-06-16 — typed-wasm's `ffi/zig` was found genuinely BUST under Zig 0.15.2 (its `tests/e2e.sh` Zig step fails, 48/1/6); we then checked whether the same shape bites snifs.
+- what_almost_broke: the rsr-template `src/interface/ffi/src/main.zig` carries pre-0.15 Zig patterns — an `opaque { ...fields... }` (`Handle`) and `std.heap.c_allocator` — that Zig 0.15.2 rejects. Rendered and built, it would not compile.
+- why_it_did_not_bite: that file is *unrendered dead scaffold* — it still holds `{{project}}` placeholders and is wired into NO build / test / gate (`tests/e2e.sh` does not touch it; `src/interface/ffi/build.zig`'s compile step is commented out; the proof + conformance gates use `zig/src/safe_nif.zig` + `buffer_abi.zig` only). A direct compile dies at the `{{project}}` placeholder *before* even reaching the type errors. The LIVE guests compile clean under Zig 0.15.2 (verified this session).
+- aetiology:
+  - root-1-template: the rsr-template shipped a generic C-FFI example written in pre-0.15 Zig idioms; snifs never rendered it (it uses `zig/src/safe_nif.zig` instead), so the dead patterns sat latent.
+  - root-2-toolchain: Zig 0.15.2 tightened two things — `opaque` may no longer carry fields, and `std.heap.c_allocator` now requires explicit libc linking.
+  - mechanism: `opaque {}` *means* "a type whose size/layout is unknown"; a field declares a layout, so opaque-with-fields is a contradiction and 0.15.2 correctly forbids it (declarations remain legal). `c_allocator` calls libc `malloc`/`free`, which a `wasm32-freestanding` guest has no business linking.
+  - non-cause-ruled-out: this is NOT a Zig regression (the change is load-bearing type discipline, by design — nothing to fix upstream) and NOT a defect in the live SNIF guests (they never used these patterns and build clean). The bustedness is entirely contained in the dead template.
+- recognition: treat Zig 0.15.2's tightening as type discipline to CONFORM TO, not work around. If this template is ever rendered + built, use the opaque-handle idiom (a concrete `struct`, hand C an `*anyopaque` / `*Handle` token, recover via `@ptrCast`/`@alignCast`) and a freestanding allocator (`FixedBufferAllocator` / page-style over a static buffer) — never `c_allocator` at the wasm32-freestanding boundary. Early signal it is about to bite for real: anyone rendering the `{{project}}` placeholders or wiring `src/interface/ffi/` into a build/CI step.
+- graduates_to_failure_mode_if: the ffi scaffold is rendered and wired into a real build/gate — at which point "ffi guest won't compile under the toolchain" becomes a live Failure Mode deserving a recovery contract.
+- notes: companion to the `SCAFFOLD` banner atop `src/interface/ffi/src/main.zig` (extended 2026-06-16 with this Zig-0.15.2 note) and PROOF-STATUS.md "Scaffold (NOT counted, NOT gated)". The same pattern is genuinely *bust* in typed-wasm — there it is a real failure, here a recognised near-hit.

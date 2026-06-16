@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: MPL-2.0
+# Dustfile — exnovation contract for snifs
+# Author: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+#
+# Paired runner: dust.ncl   (NOT YET PRESENT — paired .ncl runners are an
+#                            estate-wide gap; cf the Adjustfile contractile-sync
+#                            check. Do not assume a runner exists.)
+# Verb:          dust
+#
+# Semantics: DUST is exnovation — the deliberate, CLEAN reduction-to-dust of a
+#            thing, "without the mess". Per component it declares a disposition
+#            (deprecate / untangle / dependency-exit / keep-forever) plus an
+#            explicit exit-condition, so a removal is a recorded decision with a
+#            trigger, never an ad-hoc deletion. (Sibling: BUST = broken — WHY
+#            things break.) Nothing here removes anything by itself.
+# Run with:  dust check    (list exnovation declarations + whether the exit-condition holds)
+# Fix with:  dust fix       (execute a declared exnovation only when its exit-condition is met)
+
+@abstract:
+Exnovation declarations for snifs. Each entry names a component, its disposition
+(deprecate / untangle / dependency-exit / keep-forever), the rationale, and the
+explicit exit-condition that must hold before the removal is carried out. This is
+the deliberate-retirement ledger; it states intent + trigger, it does not delete.
+@end
+
+## Exnovation Declarations
+
+### rsr-template-ffi-scaffold
+- target: src/interface/ffi/  (the unrendered rsr-template C-FFI tree, incl. src/main.zig, build.zig, test/integration_test.zig)
+- disposition: deprecate
+- rationale: dead scaffold — unrendered (`{{project}}` placeholders), wired into no build or gate, and would not compile under Zig 0.15.2 even if rendered (see the Bustfile near-hit `zig-0.15.2-opaque-with-fields-template-rot`). The real guest ABI is `zig/src/{safe_nif,buffer_abi}.zig` + `verification/proofs/idris2/ABI/*` + `abi_conformance.py`.
+- exit-condition: remove once the template-instantiation tooling (`tests/e2e/template_instantiation_test.sh`, `scripts/validate-template.sh`, `benches/template_bench.sh`) no longer requires the ffi scaffold present, OR once that tooling is itself retired. Until then KEEP as the untouched rsr-template baseline (it is harmless: it builds nothing).
+- status: declared
+- severity: advisory
+
+### orphan-rust-guest-wasm-artifact
+- target: priv/demo_guest_rust.wasm  (813-byte build artifact in the working tree)
+- disposition: dependency-exit
+- rationale: a stale built artifact NOT loaded by the demo — `SnifDemo.RustGuest` loads `rust/target/.../demo_guest.wasm`, not this. It is a generated leftover, not source. (`priv/*.wasm` is gitignored, so it is never committed.)
+- exit-condition: deletable from the working tree at any time; it is regenerated on demand from `rust/crates/demo-guest`. No source depends on this path.
+- status: declared
+- severity: advisory
+
+### keep-forever-dual-rust-guest-trees
+- target: rust/ (Cargo workspace, canonical) and rust-guest/ (standalone single-crate experiment)
+- disposition: keep-forever
+- rationale: NOT duplication-to-exnovate — owner-declared deliberate (see rust-guest/README.adoc + ADR-0005). The workspace `rust/crates/demo-guest` is the demo's guest; `rust-guest/` is the minimal proof-of-shape. Recorded here so a future hygiene sweep does not "dedupe" them.
+- exit-condition: none — explicit keep. Revisit only on owner instruction.
+- status: declared
+- severity: advisory
