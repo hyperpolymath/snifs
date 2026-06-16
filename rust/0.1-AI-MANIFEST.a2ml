@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: MPL-2.0
+---
+### [META]
+id: "rust"
+level: 1
+parent: "../0-AI-MANIFEST.a2ml"
+
+---
+### [AI_MANIFEST]
+description: |
+  Cargo workspace for the Rust wasm32 guests and the shared ABI crate. Compiled
+  to wasm32 and run as SNIF guests; no host-native Rust ships.
+
+canonical_locations:
+  abi_crate: "crates/snif-abi/"
+  logic_crate: "crates/snif-logic/"
+  demo_guest: "crates/demo-guest/"
+  build: "build-wasm.sh"
+  supply_chain: "deny.toml"
+
+invariants:
+  - "Guests compile to wasm32 only; no host-native Rust artifacts are shipped."
+  - "Sibling single-crate guest lives in ../rust-guest/ (dual-source tracked in the Dustfile)."

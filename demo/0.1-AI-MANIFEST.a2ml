@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: MPL-2.0
+---
+### [META]
+id: "demo"
+level: 1
+parent: "../0-AI-MANIFEST.a2ml"
+
+---
+### [AI_MANIFEST]
+description: |
+  In-BEAM demonstrator. An Elixir/Mix application (snif_demo) that loads SNIF
+  guest wasm via wasmex and exercises crash-isolation: a guest trap returns
+  {:error, _} and the BEAM survives.
+
+canonical_locations:
+  application: "lib/snif_demo/"
+  tests: "test/"
+  bench: "bench/snif_bench.exs"
+
+invariants:
+  - "NEVER use raw NIFs here; guests load only through the SNIF/wasmex path."
+  - "Guest wasm under priv/ is a build artifact (gitignored); regenerate via the build recipes."

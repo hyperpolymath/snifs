@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: MPL-2.0
+---
+### [META]
+id: "zig"
+level: 1
+parent: "../0-AI-MANIFEST.a2ml"
+
+---
+### [AI_MANIFEST]
+description: |
+  Zig source for the SNIF guest: the safe-NIF kernel, the multi-value buffer
+  ABI, and the burble FFT. Compiled to wasm32-freestanding -OReleaseSafe.
+
+canonical_locations:
+  safe_nif: "src/safe_nif.zig"
+  buffer_abi: "src/buffer_abi.zig"
+  burble_fft: "src/burble_fft.zig"
+  build: "build.zig"
+  buffer_abi_build: "buffer_abi_build.sh"
+
+invariants:
+  - "Guests target wasm32-freestanding; ReleaseSafe is the trust baseline (traps, not UB)."
+  - "buffer_abi_build/ is a build artifact (gitignored)."
