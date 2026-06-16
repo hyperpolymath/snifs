@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: MPL-2.0
+---
+### [META]
+id: "benches"
+level: 1
+parent: "../0-AI-MANIFEST.a2ml"
+
+---
+### [AI_MANIFEST]
+description: |
+  Benchmark and safety-assertion harness for the SNIF guest. Drives the
+  ReleaseSafe-vs-ReleaseFast comparison and the metamorphic eval.
+
+canonical_locations:
+  safety_assertion: "assert_safer.py"
+  eval_driver: "snif_eval.sh"
+  template_bench: "template_bench.sh"
+
+invariants:
+  - "Generated outputs (eval_results.json, eval_tmp/) are build artifacts and MUST NOT be committed."
+  - "ReleaseSafe is the trust baseline; benches assert it is no less safe than ReleaseFast."
