@@ -1,1 +1,16 @@
-# AI Manifest - Level 1: tests
+# SPDX-License-Identifier: MPL-2.0
+---
+### [META]
+id: "tests"
+level: 2
+parent: "../0.1-AI-MANIFEST.a2ml"
+
+---
+### [AI_MANIFEST]
+description: |
+  Test assets and taxonomy for the verification pillar — classifies the repo's
+  test / aspect / bench coverage.
+
+canonical_locations:
+  taxonomy: "TEST-TAXONOMY.adoc"
+  readme: "README.adoc"
