@@ -14,7 +14,10 @@ defmodule SnifDemo.MixProject do
   end
 
   def application do
-    [extra_applications: [:logger]]
+    [
+      extra_applications: [:logger],
+      mod: {SnifDemo.Application, []}
+    ]
   end
 
   defp deps do

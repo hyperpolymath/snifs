@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+[package]
+name = "snif-logic"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+# Kani / Creusot / Prusti are dev-only verifier deps; gated behind a feature so
+# the wasm build never pulls them. The verifier CI step enables `verify`.
+[features]
+verify = []
+
+[dependencies]
+
+[lints]
+workspace = true

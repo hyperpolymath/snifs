@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+#
+# rust-guest: a MINIMAL standalone Rust->wasm32 SNIF guest.
+#
+# Single-crate (Cargo.toml + src/lib.rs) realisation of the rust-guest design.
+# Target: wasm32-unknown-unknown (NO WASI — the Rust analogue of the Zig
+# ADR-002 wasm32-freestanding posture; the guest has ZERO host imports so a
+# trap can only ever surface as the wasmex/wasmtime host's {:error, _}).
+#
+# UNSAFE-CODE POSTURE (ground-truthed against rustc 1.95.0):
+#   - The task asks for `#![forbid(unsafe_code)]`. In rustc 1.95 `no_mangle`
+#     is itself classified under the `unsafe_code` lint, so a WHOLE-CRATE
+#     `forbid` makes EVERY `#[unsafe(no_mangle)]` export a HARD ERROR (verified:
+#     E0453 when a per-item #[allow] is added, and a plain "declaration of a
+#     `no_mangle` function" error otherwise). A single forbidding crate
+#     therefore literally cannot export wasm functions.
+#   - Resolution that keeps the directive's TEETH: crate-level
+#     `#![deny(unsafe_code)]` (overridable per-item only for the export
+#     attribute), `#![forbid(unsafe_code)]` on the PURE-LOGIC module (where it
+#     bites and matches the design's `snif-logic` crate), and the genuine
+#     linear-memory unsafe confined to ONE small audited `abi` module behind a
+#     per-item #[allow]. This is the exact pattern the rust/ workspace
+#     ground-truthed, compressed into one crate per the task's path constraint.
+
+[package]
+name    = "rust-guest"
+edition = "2024"
+version = "0.1.0"
+license = "MPL-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+# The SNIF build invariant in profile form — the Rust analogue of Zig
+# -OReleaseSafe. VERIFIED upstream: with overflow-checks=false a runtime
+# i32::MAX+1 silently wraps (the ReleaseFast danger); with it true it TRAPS.
+# panic="abort" + the wasm32 #[panic_handler] turn a Rust panic into a wasm
+# `unreachable` trap rather than an unwind.
+[profile.release]
+opt-level        = "s"
+panic            = "abort"   # MUST: a panic becomes a trap, never an unwind/UB
+overflow-checks  = true      # MUST: ReleaseSafe analogue — arithmetic UB -> trap
+lto              = true
+strip            = true
+debug-assertions = true      # keeps bounds / debug_assert checks in release

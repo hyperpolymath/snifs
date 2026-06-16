@@ -11,6 +11,8 @@
 
 module ABI.Layout
 
+import Data.Nat
+
 %default total
 
 --------------------------------------------------------------------------------
@@ -74,18 +76,18 @@ wasmValNaturallyAligned F64 = Refl
 ||| Proof that all WASM value sizes are at least 4 bytes.
 export
 wasmValSizeAtLeast4 : (t : WasmValType) -> LTE 4 (wasmValSize t)
-wasmValSizeAtLeast4 I32 = lteRefl
-wasmValSizeAtLeast4 I64 = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight lteRefl)))
-wasmValSizeAtLeast4 F32 = lteRefl
-wasmValSizeAtLeast4 F64 = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight lteRefl)))
+wasmValSizeAtLeast4 I32 = reflexive
+wasmValSizeAtLeast4 I64 = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight reflexive)))
+wasmValSizeAtLeast4 F32 = reflexive
+wasmValSizeAtLeast4 F64 = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight reflexive)))
 
 ||| Proof that all WASM value sizes are positive (> 0).
 export
 wasmValSizePositive : (t : WasmValType) -> LT 0 (wasmValSize t)
-wasmValSizePositive I32 = LTESucc (LTESucc (LTESucc (LTESucc LTEZero)))
-wasmValSizePositive I64 = LTESucc (LTESucc (LTESucc (LTESucc LTEZero)))
-wasmValSizePositive F32 = LTESucc (LTESucc (LTESucc (LTESucc LTEZero)))
-wasmValSizePositive F64 = LTESucc (LTESucc (LTESucc (LTESucc LTEZero)))
+wasmValSizePositive I32 = LTESucc LTEZero
+wasmValSizePositive I64 = LTESucc LTEZero
+wasmValSizePositive F32 = LTESucc LTEZero
+wasmValSizePositive F64 = LTESucc LTEZero
 
 --------------------------------------------------------------------------------
 -- Padding and Alignment Arithmetic
@@ -128,10 +130,20 @@ public export
 fieldAlignment : StructField -> Nat
 fieldAlignment f = wasmValAlign f.fieldType
 
+||| Every field alignment is a WASM value alignment (always 4 or 8), hence nonzero.
+||| Supplies the erased nonzero witness for `modNatNZ` without forcing the abstract
+||| `wasmValAlign f.fieldType` to reduce to a literal `S _`.
+public export
+fieldAlignmentNonZero : (f : StructField) -> NonZero (fieldAlignment f)
+fieldAlignmentNonZero (MkField _ _ I32) = ItIsSucc
+fieldAlignmentNonZero (MkField _ _ I64) = ItIsSucc
+fieldAlignmentNonZero (MkField _ _ F32) = ItIsSucc
+fieldAlignmentNonZero (MkField _ _ F64) = ItIsSucc
+
 ||| Proof that a field is correctly aligned within a struct.
 public export
 FieldAligned : StructField -> Type
-FieldAligned f = modNatNZ (fieldOffset f) (fieldAlignment f) SIsNonZero = 0
+FieldAligned f = modNatNZ (fieldOffset f) (fieldAlignment f) (fieldAlignmentNonZero f) = 0
 
 ||| Proof that a field does not overflow past a given struct size.
 public export

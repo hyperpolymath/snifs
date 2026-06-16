@@ -14,6 +14,7 @@
 module Types
 
 import Data.So
+import Data.Nat
 import Decidable.Equality
 
 %default total
@@ -80,7 +81,7 @@ testedTrapKinds = [TrapOOB, TrapUnreachable, TrapPanic, TrapOverflow, TrapDivZer
 
 ||| Proof that we test exactly 5 trap kinds.
 export
-testedTrapCount : length testedTrapKinds = 5
+testedTrapCount : List.length Types.testedTrapKinds = 5
 testedTrapCount = Refl
 
 --------------------------------------------------------------------------------
@@ -212,7 +213,8 @@ public export
 record Bounded (max : Nat) where
   constructor MkBounded
   value : Nat
-  {auto 0 inBounds : LTE value max}
+  -- un-erased: required for constructive proof of boundedLeMax
+  {auto inBounds : LTE value max}
 
 ||| Proof that a Bounded value is always <= max.
 export
@@ -227,4 +229,4 @@ zeroIsBounded = MkBounded 0
 ||| Proof that max is always a valid Bounded value.
 export
 maxIsBounded : {max : Nat} -> Bounded max
-maxIsBounded = MkBounded max
+maxIsBounded = MkBounded max {inBounds = reflexive}

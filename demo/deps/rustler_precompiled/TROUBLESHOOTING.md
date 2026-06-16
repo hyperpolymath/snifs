@@ -1,5 +1,3 @@
-<!-- SPDX-License-Identifier: MPL-2.0 -->
-<!-- Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk> -->
 # Troubleshooting
 
 Some problems are related to specific targets that need additional configuration or dependencies.

@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= rust-guest — standalone minimal Rust→wasm32 SNIF guest (experiment)
+
+== What this is (and what it is NOT)
+
+This is a *deliberate, standalone* single-crate realisation of the Rust→wasm32 SNIF guest
+path: one `Cargo.toml` + `src/lib.rs`, `wasm32-unknown-unknown`, zero host imports, with the
+`#![forbid(unsafe_code)]`-on-the-logic-module posture worked out against rustc 1.95 (see the
+header of `src/lib.rs`). It exists to prove the *minimal* shape of the design.
+
+It is **NOT** the guest the demo loads. The canonical, demo-wired Rust guest is the **Cargo
+workspace** at `rust/` (members `crates/snif-abi`, `crates/snif-logic`, `crates/demo-guest`);
+`demo/lib/snif_demo/rust_guest.ex` loads `rust/target/wasm32-unknown-unknown/release/demo_guest.wasm`.
+
+[cols="1,3",options="header"]
+|===
+| Tree | Role
+| `rust/` (workspace) | **Canonical.** `crates/demo-guest` is built + loaded by the demo; structured into abi / logic / guest crates.
+| `rust-guest/` (this) | **Standalone experiment.** The minimal one-crate proof-of-shape. Not loaded by anything; kept as the reference baseline, not merged into the workspace.
+|===
+
+Both are intentional and kept distinct — this is documented, not accidental duplication.
+The decision record for the Rust guest path is `docs/decisions/0005-rust-wasm32-guest-and-verifier.adoc`.
+
+ABI conformance for either Rust guest (signatures vs the verified Idris2 model) is pending the
+buffer-ABI multi-language gate — see `PROOF-NEEDS.md` (ABI-7 ledger).

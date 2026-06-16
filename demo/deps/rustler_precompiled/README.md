@@ -1,5 +1,3 @@
-<!-- SPDX-License-Identifier: MPL-2.0 -->
-<!-- Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk> -->
 # Rustler Precompiled
 
 [![CI](https://github.com/philss/rustler_precompiled/actions/workflows/ci.yml/badge.svg)](https://github.com/philss/rustler_precompiled/actions/workflows/ci.yml)

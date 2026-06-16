@@ -13,3 +13,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Run: just changelog -->
 
 ## [Unreleased]
+
+### Fixed
+- **Formal proofs now actually machine-check.** The 7 Idris2/Lean4 proofs were marked
+  "100% proven" since 2026-04-16, but `Foreign`/`Platform`/`Compliance` never compiled
+  (Idris2 unbound-implicit auto-binding; unary-`Nat` blow-up on 65536-scale arithmetic)
+  and no CI job ever ran a prover. All 6 Idris2 modules + the Lean4 module now pass.
+- **Justfile was unparseable by `just`** (line 2 used `//` instead of `#`), which broke
+  every recipe including `build-wasm` used by the e2e gate. Fixed.
+- **Proof gate was decorative.** `just proof-check-*` used a broken `idris2 --check`
+  invocation (no `--source-dir`, never resolved the `ABI.*` graph) and silently passed
+  when the prover was absent (SKIP = exit 0). Now uses the correct invocation and
+  fails-on-skip.
+- **`checked_add` doc-comment corrected.** The comment claimed "overflow -> trap" but the body is
+  `a +% b` (wrapping); the GAP-1b metamorphic gate surfaced the contradiction. The comment now
+  states the wrapping behaviour accurately (the trapping-overflow demo is `crash_overflow`); the
+  export name is unchanged.
+
+### Changed
+- Project gloss **"Safe NIFs" → "Safer NIFs"** (acronym SNIF unchanged): WASM sandboxing
+  makes NIFs *safer*, not provably *safe*. Living docs + paper/citation titles updated.
+  NOTE: the paper carries Zenodo DOI 10.5281/zenodo.19520245 under the old title — the
+  rename should be reflected on the next Zenodo version/deposit.
+- Re-modeled `Platform.idr` WASM memory-size facts over `Integer` (was unary `Nat`).
+
+### Added
+- `.github/workflows/proofs.yml` — real CI proof gate (Idris2 + Lean4 via Nix).
+- **SNIFs 2 — sharpened verification.** SEC-1 (`SnifIsolation.agda`) now wires confidentiality into
+  the operational theorem (deniability re-derived over the actual run via `run-deniable` /
+  `fault-via-observe` + a two-distinct-secret `SecretWitness`), models the real 6-origin error
+  taxonomy (`TrapOrigin` guestFault / hostBudget / preExec + a `call` front-end + `PreExecWitness`),
+  and adds a non-trivial-`Alive` recovery witness (`PartialAlive`) — all mutation-confirmed
+  load-bearing by a 4-skeptic adversarial re-audit (`--safe --without-K`, every targeted mutation
+  rejected).
+- **ABI-7 buffer-guest coverage.** `verification/proofs/idris2/ABI/BufferAbi.idr` models all 7
+  `buffer_abi` exports (multi-value/void-faithful `WasmSig`), raising gated ABI coverage to 15 of 20
+  Zig export sites; `verification/tools/abi_conformance.py` is now guest-aware (per-guest model
+  manifest, multi-value/void parsing). The conformance gate now runs in CI (`proofs.yml`, CI-1).
+- **GAP-1b behaviour gate.** `demo/test/snif_metamorphic_test.exs` — dependency-free metamorphic
+  relations over the scalar kernels (fibonacci recurrence + base cases; `checked_add` `wrap32`
+  oracle + boundary-wrap).
+- `AFFIRMATION.adoc` — point-in-time, ground-truthed honesty snapshot (the README/EXPLAINME/AFFIRMATION
+  trio); SPDX header parked for the owner to add + sign.

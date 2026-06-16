@@ -10,6 +10,10 @@
 (* Replace States, Init, Next with your project's actual states.            *)
 (***************************************************************************)
 
+\* SCAFFOLD — NOT A SNIF SPEC. Unfilled rsr-template residue (generic request
+\* pipeline), excluded from the proof gate; TLC is not installed. The SNIF proofs
+\* that count are in verification/proofs/{idris2,lean4}. Candidate real TLA+
+\* obligation: the per-call instance lifecycle / fuel-metering model.
 EXTENDS Naturals, Sequences, FiniteSets
 
 CONSTANTS

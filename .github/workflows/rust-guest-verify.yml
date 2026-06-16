@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+#
+# Rust SNIF guest: build + verifier-on-by-default gate (ADR-0005).
+# Fail-closed. The source verifier (Kani) runs as a standard build step.
+name: Rust SNIF guest verify
+on:
+  push:
+    branches: [main, master]
+    paths: ["rust/**", ".github/workflows/rust-guest-verify.yml"]
+  pull_request:
+    paths: ["rust/**", ".github/workflows/rust-guest-verify.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain + wasm32 target
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          rustup default 1.95.0
+          rustup component add clippy
+          rustup target add wasm32-unknown-unknown
+
+      # ── Static gates (run for free) ────────────────────────────────────
+      # #![forbid(unsafe_code)] on snif-logic and #![deny(unsafe_code)] on the
+      # others are enforced by these compiles.
+      - name: Build guest (ReleaseSafe invariant from [profile.release])
+        run: cargo build --release --target wasm32-unknown-unknown
+
+      - name: wasm validate + assert ZERO imports (self-contained sandbox)
+        run: |
+          W=target/wasm32-unknown-unknown/release/demo_guest.wasm
+          cargo install wasm-tools --locked || true
+          wasm-tools validate "$W"
+          if wasm-tools print "$W" | grep -q '(import'; then
+            echo "::error::guest has imports — not self-contained"; exit 1
+          fi
+
+      - name: Clippy (pedantic, warnings = errors)
+        run: cargo clippy --all-targets -- -D warnings -W clippy::pedantic
+
+      - name: Supply-chain (bans rustler stack)
+        run: |
+          cargo install cargo-deny --locked || true
+          cargo deny check
+
+      # ── The source verifier: verifier-on-by-default ────────────────────
+      - name: Kani (proves snif-logic harnesses)
+        run: |
+          cargo install --locked kani-verifier || true
+          cargo kani setup || true
+          cargo kani -p snif-logic

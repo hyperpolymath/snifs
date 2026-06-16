@@ -49,10 +49,13 @@ export fn fibonacci(n: i32) i64 {
     return b;
 }
 
-/// Safe integer addition with overflow check.
-/// In ReleaseSafe: overflow -> trap. In ReleaseFast: wraps silently.
+/// Two's-complement WRAPPING i32 addition (`a +% b`). NOTE: despite the historical name
+/// `checked_add`, this does NOT trap on overflow — it wraps (i32_max + 1 = i32_min), in BOTH
+/// ReleaseSafe and ReleaseFast (`+%` is defined wrapping, not UB, so the build mode is irrelevant).
+/// The trapping-overflow demo is `crash_overflow`. Behaviour pinned by the GAP-1b metamorphic
+/// `wrap32` oracle in `demo/test/snif_metamorphic_test.exs`.
 export fn checked_add(a: i32, b: i32) i32 {
-    return a +% b; // Use wrapping add explicitly — this is intentional
+    return a +% b; // wrapping add — intentional; see the doc-comment above
 }
 
 // --- Crash isolation demos ---
@@ -69,7 +72,10 @@ export fn crash_oob() i32 {
 /// Explicit unreachable — always reached at runtime.
 /// ALL modes: emits WASM unreachable instruction -> trap.
 export fn crash_unreachable() i32 {
-    if (runtime_index == 99) unreachable;
+    // OA-2(b): runtime_index (=3) is always < 99, so this ALWAYS fires — matching
+    // the docstring above. The prior `== 99` (copied from burble_fft, index 99)
+    // never fired here, silently returning 0 and contradicting the paper/tests/proofs.
+    if (runtime_index < 99) unreachable;
     return 0;
 }
 

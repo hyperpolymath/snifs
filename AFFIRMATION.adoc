@@ -1,0 +1,300 @@
+// SPDX-License-Identifier: MPL-2.0 OR CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+// Author: Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= AFFIRMATION — SNIFs (Safer NIFs), as of 2026-06-16
+:toc: macro
+:toclevels: 2
+
+_the No-Bullshit file: what we affirm was true and checkable at this moment_
+
+[NOTE]
+====
+*Genre.* An *affirmation* is a solemn declaration of the truth of a statement,
+made by someone who _declines to swear an oath_. That is exactly what this is:
+our truth-as-best-believed at a stamped instant — binding on our honesty, not a
+claim of infallibility. It is not the README and not the EXPLAINME:
+
+[cols="1,3,2",options="header"]
+|===
+| File | Answers | Tense
+| `README`      | _Where is this going, and why?_ — what SNIF is, why care, quick start | future / aspirational
+| `EXPLAINME`   | _How is it built, and what's the evidence?_ — claim-to-code mapping | descriptive / mechanism
+| *`AFFIRMATION`* (this file) | _What can we honestly affirm was *true and checkable* at a stamped moment?_ | a frozen instant, falsifiable
+|===
+
+It is deliberately small, dated, and signed, so a reader can hold us to exactly
+what we affirmed, when we affirmed it.
+====
+
+toc::[]
+
+== What this is, and how it is designed to work
+
+*What it is.* A short, dated, jointly-signed snapshot of what we can _honestly
+and verifiably_ claim about this repo at one exact moment. Nothing here is
+marketing and nothing is a promise about the future — both of those live in the
+README. This file is the receipt.
+
+*How it is designed to work.* Three moving parts make it trustworthy:
+
+. *Ground truth, not memory.* Every claim below was produced by _running the
+  tool in the session that wrote this file_ — the proof checkers, the ABI
+  conformance gate, and the in-BEAM test suite — on 2026-06-16. If a status doc
+  or a memory said otherwise, the live run wins and we flag the contradiction.
+. *A frozen anchor.* The file names the exact commit SHA, branch, UTC timestamp,
+  working-tree delta, and toolchain (see <<Verifiable anchor>>), so "true"
+  always means "true _at this point_". Move the SHA and the file becomes a draft
+  until re-run.
+. *A real signature.* It is landed by a *signed git commit*; that signature over
+  this content at the anchored SHA is what makes the affirmation tamper-evident
+  and attributable — not the prose alone.
+
+*We are fallible.* We can be wrong, stale, or simply mistaken about our own
+work. This file is our best honest belief, not a proof of its own correctness.
+Treat it as a falsifiable claim, not gospel.
+
+== The epistemic contract (read this before you trust _or_ attack)
+
+This document records our *best joint belief* at the timestamp below. It is
+*not a guarantee of correctness.* We may be wrong. We may have missed something
+— a hole, a stale doc, or a proof that checks an idealised _model_ we then fail
+to match in the running _runtime_.
+
+*No intentional overclaim.* That is the only guarantee here: we have not
+_knowingly_ inflated anything. Where something is tested-but-not-proved, we say
+so. Where a proof covers a model and trusts the real runtime, we say so. Where
+something is ledgered, weak, or merely-an-interface-check, we say so. An honest
+claim here that turns out false is an error to fix — not a lie.
+
+*Standing invitation to refute.* You are _invited_ to bulldoze any claim in this
+file. The fair form of the attack is:
+
+. Read this file at the stamped commit.
+. Reproduce (or fail to reproduce) the checks in <<reproduce,Reproduce it yourself>>.
+. _Then_ tell us where the discrepancy is, against the artefact as it stood at
+  this moment — so we can either justify it or concede it on the record.
+
+An attack that skips steps 1–2 is attacking a strawman of a different date.
+
+*No fights before the facts are cleared up.* We are not interested in a dispute
+over a claim until the discrepancy has actually been checked against the
+artefact at this commit and we have had the chance to either justify it or
+concede it on the record. Good faith both ways: bring a reproducible
+discrepancy and we will fix the claim, the doc, or the code — promptly and
+without defensiveness. The goal is a corrected record, not a won argument.
+
+== Verifiable anchor
+
+[cols="1,3"]
+|===
+| *Repo*        | `hyperpolymath/snifs` (Safer NIFs — native compute for the BEAM via a wasmtime sandbox)
+| *Branch*      | `feat/snifs-2`
+| *Commit (HEAD / anchor)* | `a82bb311609a2580f37dbbc7c1b6687ee7a3c0b7` — the signed commit that lands the SNIFs 2 work. This AFFIRMATION is landed by that commit's signed *child*, so **parent == anchor SHA**.
+| *Permalink*   | https://github.com/hyperpolymath/snifs/tree/a82bb311609a2580f37dbbc7c1b6687ee7a3c0b7
+| *Verified (UTC)* | 2026-06-16T12:22:08Z
+| *Toolchain*   | Idris2 0.8.0 · Lean 4.13.0 · Agda 2.8.0 · Zig 0.15.2 · wasm-tools 1.249.0 · Elixir 1.18.4 / Erlang OTP 25 · wasmex 0.14.0 · Python 3.12.3 · just 1.50.0
+|===
+
+[NOTE]
+====
+*State at this anchor.* Unlike an earlier draft of this file (which described an
+uncommitted working tree), the verification affirmed here **is committed** at the
+anchor SHA `a82bb31` — `SnifIsolation.agda`, `SnifVerdict.agda`, `BufferAbi.idr`,
+the guest-aware conformance tool, the metamorphic gate, the demo, the Rust guests
+and the reconciled docs are all in that commit (signed, `id_ed25519_signing`). The
+gate results below were re-run against that committed state at the verified UTC
+above. Build artifacts (`priv/*.wasm`, `*.agdai`, `zig/buffer_abi_build/`) are
+intentionally **not** committed — CI rebuilds them. This AFFIRMATION itself is
+landed by the signed child commit; if its parent SHA matches the anchor and the
+commit verifies, the affirmation is anchored. Move HEAD past it and re-run
+<<reproduce>> before trusting it.
+====
+
+== Companion documents and repo metadata (cross-check)
+
+This affirmation should be read against the repo's own public claims. Where they
+drift from what we verified, we say so here rather than leave the reader to find out.
+
+* *`README.adoc`* — present. link:README.adoc[_"SNIFs: Safer Native Implemented
+  Functions for the BEAM via WebAssembly Sandboxing"_]. Sells the vision + the
+  scope ceiling; this file is its receipt for one moment.
+* *`EXPLAINME.adoc`* — present. Maps README claims to code paths and carries the
+  corrected "SNIF realizes _a_ cleave instance, not _the_ cleave" framing. The
+  estate trio (README / EXPLAINME / AFFIRMATION) is *complete* for this repo once
+  this file lands.
+* *`PROOF-STATUS.md` / `PROOF-NEEDS.md`* — the living ledgers this snapshot cites,
+  reconciled to the verified state in the anchor commit: `PROOF-STATUS.md` now counts
+  10 gated artifacts, marks SEC-1 F1/F2 **RESOLVED** (keeping F3/F4/F5 as standing
+  precision notes), and records ABI-7 at 15/20 + CI-1 done.
+* *GitHub repo description* — corrected this session to _"SNIFs: **Safer** Native
+  Implemented Functions for the BEAM via WebAssembly Sandboxing"_ (it previously said
+  "Safe"; the project renamed *"Safe NIFs" → "Safer NIFs"* — see `CHANGELOG` — because
+  the end-to-end guarantee is _not_ unconditional, see <<nuance>>).
+* *GitHub topics* — `beam`, `elixir`, `erlang`, `fault-tolerance`, `nif`,
+  `research`, `wasmtime`, `webassembly`, `crash-isolation`. *Under-claim:* there
+  is no `formal-verification` topic, although the repo now carries 10
+  machine-checked proof artifacts + a machine-checked operational isolation
+  theorem. The tags undersell the verification rather than oversell it.
+
+== The honest state (one breath)
+
+*SNIFs is a working, machine-verified "safer NIF" for the BEAM: native
+compute/buffer functions compiled to WebAssembly and run in a wasmtime sandbox,
+so a guest fault becomes a catchable `{:error, _}` and the BEAM survives. The
+in-BEAM demo is green, the formal gate is green (including an operational
+crash-isolation theorem with deniability and a 6-origin error taxonomy wired in),
+and the interface + a slice of behaviour are gated against the real built wasm —
+yet it remains "Safer", not "Safe": one explicit runtime-faithfulness assumption
+is trusted, not yet machine-discharged, and several coverage items are honestly
+ledgered.*
+
+=== What is solid (and how we checked)
+
+* *The formal gate is green — verified this moment.* `just proof-check-all` →
+  *exit 0*: **7 Idris2** modules (`Types`, `ABI/{Layout,Platform,Pointers,Foreign,Compliance,BufferAbi}`),
+  **1 Lean4** (`ApiTypes`), **2 Agda** (`SnifVerdict`, `SnifIsolation`, both
+  `agda --safe --without-K`), plus the dangerous-pattern scan (no
+  `believe_me`/`postulate`/`sorry`/`Admitted`).
+* *SEC-1 — the operational crash-isolation theorem — typechecks.*
+  `verification/proofs/agda/SnifIsolation.agda` proves, by induction over a
+  fuelled host↔guest small-step model: verdict ∈ ok ⊕ trap, host survives every
+  outcome, the trap carries no guest value, and — newly wired into the
+  operational run — the fault residue is the _redacted_ secret only, so two
+  faults with equal redaction are host-indistinguishable (`run-deniable`). The
+  verdict now models the real *6-origin* taxonomy (guest-fault / host-budget /
+  pre-exec) via a `call` front-end, not a binary trap. It is proven *modulo* an
+  explicit `FaithfulRuntime` record hypothesis (the TCB) — see <<nuance>>.
+* *Interface conformance is gated against the real binaries.*
+  `just abi-conformance` → *exit 0*: **15 ABI specs** across **2 guests**
+  (`safe_nif` 8, `buffer_abi` 7) — the built wasm's real export signatures match
+  the verified Idris2 model exactly, including three void-returning buffer
+  exports.
+* *In-BEAM behaviour runs.* `mix test` (in `demo/`) → *30 tests, 0 failures* on
+  Erlang/OTP 25, Elixir 1.18.4, with the precompiled `wasmex` 0.14 NIF. This
+  includes crash isolation across every failure mode (OOB / unreachable / @panic
+  / overflow / div-zero → `{:error,_}`, BEAM alive after each) and a new
+  dependency-free *metamorphic behaviour gate* over the numeric kernels.
+
+[#nuance]
+=== The honest nuance you must not lose
+
+. *"Safer", not "Safe" — the runtime TCB is trusted, not proven.* SEC-1 is proven
+  over a model whose first argument is a `FaithfulRuntime` record bundling
+  primitive single-step facts (wasmtime never gets stuck; a trapped step is caught
+  and surfaced as `{:error,_}` with the scheduler preserved). The prose claim that
+  this record is _faithful to wasmtime/wasmex_ — "wasmtime ⊨ FaithfulRuntime" — is
+  **assumed, not discharged in a prover** (it is the named open item SEC-1-TCB, a
+  WasmCert-Coq effort). This residual assumption is exactly _why_ the project is
+  Safer NIFs.
+. *Model ↔ code faithfulness is only partly mechanised.* The proofs verify a
+  logical model. The ABI conformance gate closes the *interface* slice of
+  model↔code (signatures match the real wasm); the metamorphic tests close a
+  *behaviour* slice (the kernels behave as modelled). The general claim "the Agda
+  model mirrors the Zig/Rust/wasmex code" is argued + tested, not itself
+  machine-verified.
+. *Honest proof labels (not over-claims).* In SEC-1, `okOrTrap` and `noForgery`
+  are *structural* facts about the `Verdict` datatype (true with no runtime in
+  scope); the load-bearing, TCB-consuming content is host *preservation*
+  (`survives`). `noForgery` is the parametric non-existence of a total extractor,
+  not an instance-level claim. We state these rather than dress them up.
+
+=== Known-incomplete but honestly fenced (loud failure, never silent miscompile)
+
+* The isolation thesis depends on building guests with `-OReleaseSafe`. Under
+  `-OReleaseFast` the same faults become *silent wrong answers* — this is
+  demonstrated, on purpose, as the negative control in the demo suite (e.g. an OOB
+  read returns a plausible adjacent value). The shipped guests are ReleaseSafe;
+  the ReleaseFast artifact exists only to keep that danger visible and tested.
+
+=== Outstanding / weak / refuted (no spin)
+
+* *SEC-1-TCB — open.* Discharging "wasmtime ⊨ FaithfulRuntime" in-prover
+  (WASM trap-soundness; trap → `{:error,_}`; scheduler resumed) is the remaining
+  half of an end-to-end isolation proof. Not started here.
+* *ABI-7 — partial.* 15 of ~20 Zig export sites are modelled+gated (`safe_nif` +
+  `buffer_abi`). `burble_fft` (`fft`/`ifft`/…) is *not* built into any artifact and
+  uses `(ptr,len)` slice marshalling = the deeper *ABI-6* obligation; it and the
+  two Rust guests are *ledgered, not gated* (`PROOF-NEEDS.md`).
+* *GAP-1b — partial.* The metamorphic behaviour gate covers the *scalar* kernels
+  (`fibonacci` recurrence/monotonicity/i64-width; `checked_add` as a wrapping i32
+  ring); the *buffer* kernels (`sum_f32` permutation-invariance, scale-then-sum)
+  are the next increment.
+* *Finding surfaced by the new gate:* the export named `checked_add` is a
+  **misnomer** — it is two's-complement *wrapping* addition (`a +% b`, intentional
+  per `zig/src/safe_nif.zig`), *not* a trapping/checked add (the trapping demo is
+  the separate `crash_overflow`). The gate characterises the real behaviour;
+  whether to rename the export is the owner's call.
+* *CI.* The ABI conformance gate now runs as a CI job (`proofs.yml`), but making it
+  a *required* status check is an owner-only branch-protection action — not done.
+* *Adversarial mutation re-audit — completed, verdict SOLID.* Four independent
+  skeptics mutation-tested the SEC-1 sharpening (`--safe --without-K`): every targeted
+  mutation was rejected as expected, so F1 (lossy redaction), F2 (the pre-exec
+  coverage + the `guestFault` tag) and F5 (the partial `Alive`) are genuinely
+  load-bearing — not vacuous; `--safe` is enforced (an injected `postulate` is
+  rejected) and `run`/`drive` totality is real (a non-decreasing-fuel mutation is
+  rejected). The only weakness it found was *stale prose*, corrected in the anchor commit.
+* *Required-check + Zenodo.* Making the conformance gate a **required** status check is
+  owner-only branch-protection (pending). The paper's Zenodo DOI still carries the old
+  "Safe" title; the rename should land on the next deposit.
+
+[#reproduce]
+== Reproduce it yourself
+
+From the repo root, at the anchor commit above (you need the toolchain in
+<<Verifiable anchor>>):
+
+[source,sh]
+----
+just proof-check-all     # expect exit 0:
+                         #   7 Idris2 OK, 1 Lean4 OK, 2 Agda OK (SnifVerdict + SnifIsolation),
+                         #   dangerous-pattern scan PASS
+just abi-conformance     # expect exit 0: builds safe_nif + buffer_abi wasm, then
+                         #   "all 2 guest(s) conform (15 ABI specs verified ...)"
+cd demo && mix test      # expect "30 tests, 0 failures" (OTP 25 / Elixir 1.18.4)
+----
+
+For the SEC-1 proof on its own (the exact gate invocation):
+
+[source,sh]
+----
+agda -i verification/proofs/agda --safe --without-K --no-libraries \
+     verification/proofs/agda/SnifIsolation.agda     # expect exit 0
+----
+
+== One-line characterisation (quote this)
+
+[quote]
+____
+"A working, machine-verified *Safer* NIF for the BEAM: native compute sandboxed
+in wasmtime so a guest fault becomes `{:error,_}` and the VM survives — with an
+operational crash-isolation theorem (deniability + 6-origin taxonomy, Agda
+`--safe`), an interface gate matching 15 export signatures to the real wasm, and
+a behaviour gate over the scalar kernels — all green this moment; *Safer not Safe*
+because one runtime-faithfulness assumption is trusted, not yet proven, and
+`burble_fft`/Rust/buffer-behaviour coverage is honestly ledgered. No intentional
+overclaim."
+____
+
+== Joint attestation
+
+We, the undersigned, assert that *to the best of our joint belief at the
+timestamp above, every claim in this file is true and was checked as described*
+— with no intentional overclaim, and with the open gaps stated rather than hidden.
+
+* *Engineering party (AI):* Claude Opus 4.8 (`claude-opus-4-8[1m]`) — ran the
+  proof gate, the ABI conformance gate, and the in-BEAM test suite recorded here
+  on 2026-06-16T12:22:08Z (against the committed anchor state) and stands behind the
+  wording above as a faithful report of those runs.
+* *Owner / maintainer:* Jonathan D.A. Jewell — _signs by committing this file with
+  `-S` (`id_ed25519_signing`); the git commit signature over this content, whose
+  parent is the anchor SHA recorded above, is the cryptographic form of this
+  affirmation._
++
+Signed-off-date: 2026-06-16
+
+[TIP]
+The authoritative, tamper-evident signature is the *signed git commit* that lands
+this file; its **parent is the anchor SHA** `a82bb31`. If that parent matches
+<<Verifiable anchor>> and the commit verifies (`id_ed25519_signing`), this
+affirmation is anchored. If HEAD later moves past it, re-run <<reproduce>> and write
+a fresh affirmation rather than trusting a stale one.

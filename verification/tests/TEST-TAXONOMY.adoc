@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= SNIF Test & Bench Taxonomy
+:toc:
+
+The full verification pyramid for SNIFs (Safer NIFs). Each layer has a *discriminating
+assertion* — the property that makes the test fail when the thing under test is wrong, so
+no layer can pass trivially. Status legend: ✅ green · 🟡 stub/partial · ⏳ pending Buffer
+ABI (in flight) · ⛔ needs OTP 28 (local env is OTP 25; use the wasmtime-CLI path until then).
+
+[cols="1,3,2,3,1",options="header"]
+|===
+| Layer | What it checks | Where | Discriminating assertion | Status
+
+| *Type tests* (proofs)
+| ABI layout/pointer/bounds; API result-type laws; the echo×epistemic safety verdict
+| `verification/proofs/idris2/**`, `lean4/ApiTypes.lean`, `agda/SnifVerdict.agda` — gate `just proof-check-all`
+| A wrong ABI/verdict shape fails to typecheck (a green gate is a machine-checked spec, not a sample)
+| ✅
+
+| *Unit*
+| Single boundary computation in isolation (no host): `fibonacci`, `checked_add`, `sum_f32`, `scale_f32`
+| `zig test` in `zig/src/*.zig`; Elixir loader/marshalling units in `demo/test/`
+| `fibonacci(10)=55`; `sum_f32([1,2,3])=6`; a wrong arithmetic answer fails
+| 🟡 / ⏳
+
+| *Point-to-point* (marshalling)
+| The buffer crosses the WASM linear-memory gap and comes back intact: `snif_alloc → write → (ptr,len) → read`
+| `verification/tests/p2p/` (new) against the Buffer ABI
+| round-trip identity `read(write(buf)) ≡ buf`; OOB write *traps*, never corrupts host memory
+| ⏳ (Buffer ABI)
+
+| *Endpoint*
+| One SNIF call through `wasmex` returns `{:ok,_}` xor `{:error,trap}`; the BEAM process stays alive
+| `demo/test/snif_demo_test.exs`
+| each of the 5 crash modes ⇒ `{:error,_}` then `still_alive()=42`; success path returns the value
+| ⛔ (or wasmtime-CLI proxy)
+
+| *E2E*
+| Full pipeline: build wasm (both modes) → load → call all exports incl. buffers → assert isolation + correctness + mode discrimination
+| `tests/e2e/`, `.github/workflows/e2e.yml`
+| ReleaseSafe traps on OOB/overflow/div-zero; ReleaseFast leaks the `0x0BADF00D` canary (proves the suite *discriminates* modes, not passes trivially)
+| ⛔ build ✅ / run ⛔
+
+| *Aspect* (architectural invariants)
+| Cross-cutting rules: every `priv/*.wasm` is ReleaseSafe; no `rustler`/native-NIF in deps; every export has an ABI proof; the loader never lets a guest fault escape
+| `tests/aspect_tests.sh`
+| flips red if a ReleaseFast artifact, a raw NIF, or an unproven export is introduced
+| 🟡
+
+| *Fuzz / property*
+| Random inputs to marshalling + crash modes: arbitrary buffers, indices, values
+| `tests/fuzz/`
+| *invariant under all inputs*: host process survives; trap xor correct value; never silent host corruption
+| 🟡 / ⏳
+
+| *Bench* (the "gap" cost — your question)
+| Overhead of crossing the boundary: wasmtime invoke cost; *per-call vs pooled* instantiation; SNIF vs raw-NIF vs Port
+| `benches/snif_eval.sh` (in flight, wasmtime-CLI, runnable now); in-BEAM bench needs OTP 28
+| reports µs/op + a regression threshold; flags if a build mode or pooling change makes a hot call slower
+| ⏳ / ⛔
+|===
+
+== Notes on the "gap" (boundary-crossing cost)
+
+The dominant cost today is *per-call instantiation* (ADR-003: `Loader.call` spins a fresh
+`wasmex` GenServer every call). That is the "extra-slow SNIF" risk. The fix is the *pooled +
+fuel/epoch* instance lifecycle (design track in flight). Expected shape once pooled: a SNIF
+call ≈ bounds-checked WASM execution + one GenServer message hop — slower than a raw NIF
+(a direct C call, ~no overhead) but far cheaper than a Port (no OS process / serialisation).
+For hot tiny calls the GenServer hop dominates, so the rework levers are: (1) pooling,
+(2) a direct-instance (non-GenServer) fast path, (3) batching, (4) keeping buffers resident
+across calls. The Bench layer quantifies all four; if a use-case is still too slow, that data
+is the trigger to rework — not a guess.
+
+== Gate wiring status
+
+`just proof-check-all` (Type layer) is ✅ green and CI-wired (`.github/workflows/proofs.yml`).
+The Unit/E2E build steps run via `just build-wasm` + `e2e.yml`. To make the proof gate
+*blocking*, add "Formal proofs — Idris2 + Lean4" to branch-protection required checks
+(owner-only). Concrete per-layer test files for the Buffer-ABI and Rust paths are added once
+those artifacts land (in flight).

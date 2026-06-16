@@ -1,6 +1,11 @@
 -- SPDX-License-Identifier: MPL-2.0
 -- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
 --
+-- SCAFFOLD — NOT A SNIF PROOF. Unfilled rsr-template residue (toy list/Nat lemmas),
+-- excluded from the proof gate (Justfile `proof-check-all`, PROOF-STATUS.md). The SNIF
+-- proofs that count are in verification/proofs/{idris2,lean4}. A real Agda obligation
+-- (candidate: (co)inductive liveness of the trap→error loop) will replace this.
+--
 -- Agda Proof Template: Inductive and coinductive properties
 -- Replace with your project's domain-specific proofs.
 -- All proofs must be total (no postulate, no {-# TERMINATING #-}).

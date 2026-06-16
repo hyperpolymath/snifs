@@ -233,9 +233,9 @@ structure BoundedNat (max : Nat) where
   le_max : val ≤ max
 
 /-- A bounded value is always ≤ max. -/
-theorem bounded_nat_le (b : BoundedNat max) : b.val ≤ max :=
+theorem bounded_nat_le {max : Nat} (b : BoundedNat max) : b.val ≤ max :=
   b.le_max
 
 /-- Zero is always bounded (for any positive max). -/
-def zeroBounded (h : 0 < max) : BoundedNat max :=
+def zeroBounded {max : Nat} (_h : 0 < max) : BoundedNat max :=
   ⟨0, Nat.zero_le max⟩

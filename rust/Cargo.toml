@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+#
+# SNIF Rust->wasm32 guest workspace.
+#
+# Three-crate split is LOAD-BEARING (ground-truthed against rustc 1.95):
+#   snif-logic : #![forbid(unsafe_code)] — ALL verifiable arithmetic; the crate
+#                Creusot/Kani/Prusti prove. No exports, no raw memory.
+#   snif-abi   : #![deny(unsafe_code)] + per-item #[allow] — the ONLY unsafe
+#                surface (linear-memory read/write/alloc). Audited line-by-line.
+#   demo-guest : the cdylib. #![deny(unsafe_code)]; each #[unsafe(no_mangle)]
+#                export carries a per-item #[allow(unsafe_code)] because
+#                `no_mangle` is classified under the `unsafe_code` lint in
+#                rustc 1.95 (verified: a whole-crate forbid makes exporting
+#                impossible). All business logic delegates to snif-logic.
+[workspace]
+resolver = "2"
+members = ["crates/snif-abi", "crates/snif-logic", "crates/demo-guest"]
+
+[workspace.package]
+edition = "2024"
+version = "0.1.0"
+license = "MPL-2.0"
+publish = false
+
+# `#[cfg(kani)]` is set by the Kani driver, not cargo; tell check-cfg it's known.
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
+
+# The SNIF build invariant, in profile form. This is the Rust analogue of Zig
+# -OReleaseSafe. VERIFIED: with overflow-checks=false a runtime i32::MAX+1
+# silently wraps to -2147483648 (no trap) — the ReleaseFast danger. With
+# overflow-checks=true it traps. panic="abort" + the wasm32 panic handler turn
+# a Rust panic into a wasm `unreachable` trap rather than an unwind.
+[profile.release]
+opt-level       = "s"
+panic           = "abort"   # MUST: a panic becomes a trap, never an unwind/UB
+overflow-checks = true      # MUST: ReleaseSafe analogue — arithmetic UB -> trap
+lto             = true
+strip           = true
+debug-assertions = true     # keeps array-bounds / debug_assert checks in release
