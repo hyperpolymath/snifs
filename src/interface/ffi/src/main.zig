@@ -12,6 +12,15 @@
 // placeholders would manufacture a PHANTOM second FFI surface that contradicts the
 // real one (boundary-erosion drift we explicitly resist).
 //
+// Even rendered, it would NOT compile under Zig 0.15.2: it uses pre-0.15 patterns
+// — an `opaque { ...fields... }` (`Handle`) and `std.heap.c_allocator` — that 0.15.2
+// rejects by design (an `opaque` has no known layout, so it may not carry fields;
+// `c_allocator` needs libc, absent at the wasm32-freestanding boundary). The modern
+// shape is the opaque-handle idiom (a concrete struct + an `*anyopaque`/`*Handle`
+// token recovered via `@ptrCast`/`@alignCast`) + a freestanding allocator. Recorded
+// as a near-hit in docs/templates/contractiles/bust/Bustfile.a2ml
+// (zig-0.15.2-opaque-with-fields-template-rot) — recognition, not a fix-queue item.
+//
 // THE REAL SNIF GUEST ABI lives in:
 //   * Implementation : zig/src/safe_nif.zig, zig/src/buffer_abi.zig (wasm32-freestanding)
 //   * Verified model : verification/proofs/idris2/ABI/{Foreign,BufferAbi,Layout,...}.idr
