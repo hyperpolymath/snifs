@@ -2,6 +2,8 @@
 ---
 ### [META]
 id: "container-templates"
+level: 1
+parent: "../0-AI-MANIFEST.a2ml"
 version: "1.0.0"
 context:
   - "https://a2ml.org/ns/v2"

@@ -1,1 +1,21 @@
-# AI Manifest - Level 1: .github
+# SPDX-License-Identifier: MPL-2.0
+---
+### [META]
+id: "github"
+level: 1
+parent: "../0-AI-MANIFEST.a2ml"
+
+---
+### [AI_MANIFEST]
+description: |
+  GitHub repository configuration: CI/CD workflows, issue and pull-request
+  templates, CODEOWNERS, dependabot / funding / settings, and community-health
+  files. GitHub community-health precedence is .github/ > root > docs/.
+
+canonical_locations:
+  workflows: "workflows/"
+  issue_templates: "ISSUE_TEMPLATE/"
+  pull_request_template: "pull_request_template.md"
+  codeowners: "CODEOWNERS"
+  dependabot: "dependabot.yml"
+  settings: "settings.yml"

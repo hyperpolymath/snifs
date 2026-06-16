@@ -1,1 +1,16 @@
-# AI Manifest - Level 1: examples
+# SPDX-License-Identifier: MPL-2.0
+---
+### [META]
+id: "examples"
+level: 1
+parent: "../0-AI-MANIFEST.a2ml"
+
+---
+### [AI_MANIFEST]
+description: |
+  Worked examples and sample project configs — illustrative material only, not
+  part of the build, test, or proof gates.
+
+canonical_locations:
+  readme: "README.adoc"
+  web_project_sample: "web-project-deno.json"
