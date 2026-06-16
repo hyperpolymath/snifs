@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-// Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+# Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # RSR Standard Justfile Template
@@ -1341,8 +1341,12 @@ help-me:
 # FORMAL VERIFICATION (PROOFS)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Check all formal proofs (Idris2 + Lean4 + Agda + Coq)
-proof-check-all: proof-check-idris2 proof-check-lean4 proof-check-agda proof-check-coq proof-scan-dangerous
+# Check all REQUIRED formal proofs: Idris2 + Lean4 + the SnifVerdict Agda safety bridge
+# + dangerous-pattern scan. The OTHER Agda/Coq/TLA+ files under verification/proofs/
+# {agda,coq,tlaplus} are unfilled rsr-template scaffold (SCAFFOLD banner atop each) and
+# are deliberately NOT gated; run `just proof-check-agda` / `proof-check-coq` once real
+# proofs land there.
+proof-check-all: proof-check-idris2 proof-check-lean4 proof-check-agda-snif proof-scan-dangerous
     @echo "=== All proof checks complete ==="
 
 # Check Idris2 proofs (ABI, types, dependent type proofs)
@@ -1351,13 +1355,13 @@ proof-check-idris2:
     set -euo pipefail
     echo "=== Checking Idris2 proofs ==="
     if ! command -v idris2 &>/dev/null; then
-        echo "SKIP: idris2 not installed"
-        exit 0
+        echo "FAIL: idris2 not installed — a real proof gate must run, never skip"
+        exit 1
     fi
     ERRORS=0
     for f in $(find verification/proofs/idris2 -name '*.idr' 2>/dev/null); do
         echo -n "  Checking $f ... "
-        if idris2 --check "$f" 2>/dev/null; then
+        if idris2 --check --source-dir verification/proofs/idris2 "$f" 2>/dev/null; then
             echo "OK"
         else
             echo "FAIL"
@@ -1376,8 +1380,8 @@ proof-check-lean4:
     set -euo pipefail
     echo "=== Checking Lean4 proofs ==="
     if ! command -v lean &>/dev/null; then
-        echo "SKIP: lean not installed"
-        exit 0
+        echo "FAIL: lean not installed — a real proof gate must run, never skip"
+        exit 1
     fi
     ERRORS=0
     for f in $(find verification/proofs/lean4 -name '*.lean' 2>/dev/null); do
@@ -1394,6 +1398,29 @@ proof-check-lean4:
         exit 1
     fi
     echo "PASS: All Lean4 proofs verified"
+
+# Check the SNIF --safe Agda proofs: the SnifVerdict echo×epistemic safety bridge AND
+# SnifIsolation (SEC-1, the operational crash-isolation theorem, proven modulo an explicit
+# FaithfulRuntime TCB). Distinct from proof-check-agda below (the unfilled rsr-template scaffold).
+proof-check-agda-snif:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== Checking Agda safety proofs (SnifVerdict bridge + SnifIsolation SEC-1) ==="
+    if ! command -v agda &>/dev/null; then
+        echo "FAIL: agda not installed — a real proof gate must run, never skip"
+        exit 1
+    fi
+    ERR=0
+    for f in SnifVerdict SnifIsolation; do
+        echo -n "  Checking $f.agda ... "
+        if agda -i verification/proofs/agda --safe --without-K --no-libraries "verification/proofs/agda/$f.agda" >/dev/null 2>&1; then
+            echo "OK"
+        else
+            echo "FAIL"; ERR=1
+        fi
+    done
+    if [ "$ERR" -ne 0 ]; then echo "FAIL: an Agda proof did not typecheck"; exit 1; fi
+    echo "PASS: SnifVerdict + SnifIsolation verified"
 
 # Check Agda proofs
 proof-check-agda:
@@ -1452,10 +1479,17 @@ proof-scan-dangerous:
     echo "=== Scanning for dangerous patterns in proofs ==="
     DANGEROUS=0
     PATTERNS="believe_me|assert_total|postulate|sorry|Admitted|unsafeCoerce|Obj\.magic"
+    # Match only REAL uses: strip comments first. The disclaimer comments legitimately
+    # mention "no believe_me", "NO Admitted", etc. and must not trip the gate.
     for f in $(find verification/proofs -name '*.idr' -o -name '*.lean' -o -name '*.agda' -o -name '*.v' 2>/dev/null); do
-        MATCHES=$(grep -nE "$PATTERNS" "$f" 2>/dev/null || true)
+        case "$f" in
+            *.v)    CODE=$(perl -0777 -pe 's/\(\*.*?\*\)//gs' "$f") ;;                  # Coq: (* … *) blocks
+            *.lean) CODE=$(perl -0777 -pe 's{/-.*?-/}{}gs' "$f" | sed 's/--.*//') ;;    # Lean: /- … -/ + -- line
+            *)      CODE=$(perl -0777 -pe 's/\{-.*?-\}//gs' "$f" | sed 's/--.*//') ;;   # Idris/Agda: {- … -} + -- line
+        esac
+        MATCHES=$(printf '%s\n' "$CODE" | grep -nE "$PATTERNS" 2>/dev/null || true)
         if [ -n "$MATCHES" ]; then
-            echo "  DANGEROUS: $f"
+            echo "  DANGEROUS (real use in code): $f"
             echo "$MATCHES" | sed 's/^/    /'
             DANGEROUS=$((DANGEROUS + 1))
         fi
@@ -1465,6 +1499,28 @@ proof-scan-dangerous:
         exit 1
     fi
     echo "PASS: No dangerous patterns found in proofs"
+
+# ABI conformance — the gap-1 (interface) drift gate. The REAL built .wasm exports +
+# signatures must match the formally-verified Idris2 ABI model (Foreign.idr WasmFuncSpec).
+# Fails if the Zig source or the proof drift apart, so the proof can't silently diverge
+# from the shipped artifact. (Interface-level; behaviour faithfulness = the metamorphic tests.)
+abi-conformance:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f priv/safe_nif_ReleaseSafe.wasm ]; then
+        echo "priv/safe_nif_ReleaseSafe.wasm missing — building first..."
+        just build-wasm
+    fi
+    if [ ! -f zig/buffer_abi_build/buffer_abi_ReleaseSafe.wasm ]; then
+        echo "buffer_abi_ReleaseSafe.wasm missing — building first..."
+        bash zig/buffer_abi_build.sh
+    fi
+    if ! command -v wasm-tools &>/dev/null; then
+        echo "FAIL: wasm-tools not installed — the conformance gate must run, never skip"
+        exit 1
+    fi
+    # No arg => check EVERY guest in the manifest (safe_nif + buffer_abi).
+    python3 verification/tools/abi_conformance.py
 
 # Show proof status summary
 proof-status:
@@ -1580,6 +1636,25 @@ build-wasm:
 # can't silently pass the build-mode invariant test against old codegen)
 test-demo: build-wasm
     cd demo && mix deps.get && mix test
+
+# ── SNIF EVALUATION (substantiate "Safer" + the overhead story) ───────────────
+# Language-agnostic half: runs in THIS env (OTP-25) via the wasmtime CLI.
+# Emits machine-readable JSON, then runs the DISCRIMINATING assertions that
+# fail loud if ReleaseSafe-vs-ReleaseFast does not actually discriminate
+# (i.e. if the silent-corruption anti-property was never exercised).
+eval: build-wasm
+    @echo "=== SNIF evaluation (wasmtime CLI; OTP-25-safe) ==="
+    RUNS=${RUNS:-30} benches/snif_eval.sh | tee priv/snif_eval.json | benches/assert_safer.py
+
+# Just the JSON (no assertions) — for dashboards / regression diffing.
+eval-json: build-wasm
+    @RUNS=${RUNS:-30} benches/snif_eval.sh
+
+# The OTP-28 half (per-call vs pooled, SNIF-vs-Port, buffer round-trip,
+# process-survival witness). Requires the OTP-28.3 target — NOT runnable here.
+eval-otp28: build-wasm
+    @echo "Requires OTP 28.3 / Elixir 1.19.4 (this env is OTP 25)."
+    cd demo && mix deps.get && N=${N:-2000} mix run bench/snif_bench.exs
 
 # Build PDF paper
 paper:

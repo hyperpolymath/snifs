@@ -1,0 +1,181 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= ADR 0005: Rust->wasm32 SNIF guest path + verifier-on-by-default
+:toc:
+
+Date: 2026-06-16
+
+== Status
+
+Proposed (artifacts built and verified locally; awaiting owner review)
+
+== Context
+
+SNIF guests must be crash-isolated WASM modules loaded by the BEAM via wasmex.
+Zig is the incumbent guest. Rust is the next guest. The owner directive is:
+
+* Rust MUST be Rust->wasm32, NOT rustler (rustler is a native, unsandboxed NIF
+  and defeats the isolation thesis — see "Why not rustler").
+* Verifier-on-by-default: a guest language with a source verifier runs it as a
+  standard build step. For Rust that is `#![forbid(unsafe_code)]` + a deductive/
+  model verifier (Creusot / Kani / Prusti).
+
+All claims below were ground-truthed by building and running, not from docs
+(rustc 1.95.0, wasm-tools 1.249, wasmtime 44, node 22).
+
+== Decision
+
+=== Target: `wasm32-unknown-unknown` (NOT wasip1)
+
+A SNIF guest is pure computation over linear memory with no host syscalls
+(ADR-002: the Zig guest is wasm32-freestanding, no WASI/IO). `wasm32-unknown-
+unknown` is the exact Rust analogue: it produces a self-contained module with
+ZERO imports (verified: `wasm-tools print | grep import` is empty), so there is
+no WASI surface to attenuate. `wasm32-wasip1` is available and would also build,
+but it pulls a WASI import surface we would then have to deny — strictly more
+attack surface for no benefit. Choose `wasm32-unknown-unknown`; revisit only if
+a guest genuinely needs WASI (e.g. clocks/random), in which case attenuate via
+wasmtime's WASI config rather than granting it by default.
+
+=== Build invariant (the ReleaseSafe analogue), enforced in `[profile.release]`
+
+[cols="1,2"]
+|===
+| `overflow-checks = true` | Arithmetic overflow TRAPS. VERIFIED: with it
+  `false`, a runtime `i32::MAX + 1` silently wraps to `-2147483648` and does NOT
+  trap — the exact ReleaseFast danger. With it `true`, it traps.
+| `panic = "abort"` + wasm panic handler | A Rust panic becomes a wasm
+  `unreachable` trap, never an unwind. VERIFIED: `crash_panic` traps with
+  "wasm `unreachable` instruction executed".
+| `debug-assertions = true` | keeps `debug_assert!` / slice-bound asserts in the
+  release artifact.
+|===
+
+These are the Rust equivalent of the `-OReleaseSafe` invariant; building without
+them is the Rust ReleaseFast footgun and must be rejected.
+
+=== Crate topology (LOAD-BEARING — forced by rustc 1.95)
+
+Three crates (`rust/crates/`):
+
+* `snif-logic` — `#![forbid(unsafe_code)]`. ALL verifiable arithmetic; the crate
+  the verifier proves. No exports, no raw memory. forbid is GENUINE here
+  (verified: it rejects even an `#[allow(unsafe_code)]`-wrapped unsafe block,
+  E0453).
+* `snif-abi` — `#![deny(unsafe_code)]` with `#[allow(unsafe_code)]` on ONLY four
+  audited primitives (alloc/dealloc/read_f32/write_f32). The single unsafe
+  surface, reviewed line-by-line.
+* `demo-guest` — the `cdylib`. `#![deny(unsafe_code)]`; each `#[unsafe(no_mangle)]`
+  export carries a per-item `#[allow(unsafe_code)]`.
+
+WHY the split, and why the guest is `deny` not `forbid`: in rustc 1.95 the
+`no_mangle`/`export_name` attribute is itself classified under the `unsafe_code`
+lint. VERIFIED: a whole-crate `#![forbid(unsafe_code)]` makes EVERY
+`#[unsafe(no_mangle)]` a HARD ERROR ("declaration of a `no_mangle` function"),
+so a forbidding crate literally cannot export wasm functions. The resolution is:
+keep `forbid` where it has teeth (the pure-logic crate the verifier proves) and
+use `deny` + per-export `#[allow]` only for the thin export shim. The unsafe
+blast radius is thus one small file (`snif-abi`), not the whole guest.
+
+=== Verifier gate: pick *Kani*, run in CI
+
+Three candidates were considered:
+
+[cols="1,3"]
+|===
+| Creusot | Deductive (translates to Why3/SMT). Strongest functional-correctness
+  story, but needs source annotations (`#[ensures]`/`#[requires]`) and is the
+  heaviest to keep green. Best as an OPT-IN deepening on `snif-logic`, not the
+  default gate.
+| Prusti  | Viper-backed deductive verifier. Similar annotation burden; less
+  active than Kani/Creusot for current toolchains.
+| *Kani*  | Bounded model checker (CBMC backend). PUSH-BUTTON: `#[kani::proof]`
+  harnesses, no source contracts required, finds the bugs SNIFs care about most
+  — panics, overflow, OOB, unreachable — by symbolic execution. Lowest
+  keep-green cost; matches "runs as a standard build step".
+|===
+
+Decision: *Kani* is the default verifier gate on `snif-logic`; Creusot is an
+opt-in deepening (feature `verify`) for functional contracts later. `snif-logic`
+ships two `#[kani::proof]` harnesses (checked_add exactness, sum_f32 empty-case);
+they are no-ops in a normal build and run under `cargo kani`.
+
+The full gate (one CI job, fail-closed):
+
+. `rustup target add wasm32-unknown-unknown`
+. `cargo build --release --target wasm32-unknown-unknown` (profile invariant)
+. `wasm-tools validate` + assert ZERO imports (sandbox self-containment)
+. `cargo clippy --all-targets -- -D warnings -D clippy::pedantic`
+. `cargo deny check` (bans the rustler stack as a tripwire; `rust/deny.toml`)
+. `cargo kani -p snif-logic` (the source verifier — verifier-on-by-default)
+
+The `#![forbid(unsafe_code)]` on `snif-logic` and `#![deny(unsafe_code)]` on the
+others are compile-time gates that run for free on step 2.
+
+== Same Snif behaviour as a Zig guest
+
+The Rust guest produces BYTE-IDENTICAL host shapes to `safe_nif.zig`: same export
+names, same `{:ok, [v]}` / `{:error, _trap}`. It is a drop-in for the `Snif`
+Elixir behaviour and pool — only `wasm_bytes/0` and the `exports/0` whitelist
+change (`demo/lib/snif_demo/rust_guest.ex`). VERIFIED end-to-end (wasmtime +
+node host driver):
+
+  fibonacci(10)=55, checked_add(2,3)=5, still_alive()=42
+  crash_panic / crash_overflow / checked_add(MAX,1)  -> all TRAP
+  sum_f32([1..5])=15;  scale_f32([1..5],10)=[10,20,30,40,50] (in-place buffer)
+  OOB buffer read -> "memory access out of bounds" trap; host survives all traps
+
+The Rust `checked_add` is STRICTER than Zig's (it traps on overflow vs Zig's
+wrapping `+%`) — a concrete instance of verifier-on-by-default making the safe
+behaviour the default.
+
+== Buffer ABI (the enabler the audit flagged as missing)
+
+Contract (host owns the marshalling, identical to what a Zig buffer guest would
+expose):
+
+  ptr = snif_alloc(len)                 // guest allocates in ITS linear memory
+  <host writes payload into `memory` at ptr>
+  result = sum_f32(ptr, n)              // or scale_f32(ptr, n, k) in-place
+  <host reads results back from `memory`>
+  snif_dealloc(ptr, len)
+
+The guest exports `memory`, `snif_alloc`, `snif_dealloc`, and the buffer NIFs.
+An out-of-range region is a wasm linear-memory access => engine trap => caught by
+the host as `{:error, _}` — the buffer ABI cannot escape the sandbox; the worst
+a bad call does is trap. This directly fixes the broken Zig FFT array-passing
+(WASM-MVP cannot pass slices as args; the fix is alloc + (ptr,len), which is
+exactly this ABI).
+
+The ABI conforms to the Idris `ABI.Layout` model: f32 = size 4 / align 4
+(`wasmValSize F32 = 4`, `wasmValAlign F32 = 4`), so an f32 buffer at an 8-aligned
+`snif_alloc` offset satisfies `FieldAligned`.
+
+== Why NOT rustler
+
+rustler builds a NATIVE, dynamically-linked `.so` NIF loaded directly into the
+BEAM OS process. It shares the BEAM's address space; a segfault, an
+`unsafe`-block UB, or an abort in rustler code kills the entire VM — precisely
+the failure mode SNIFs exist to prevent. rustler provides ZERO of the SNIF
+guarantees: no crash isolation, no fuel/liveness bound, no sandbox memory
+boundary, no source-verifier-by-default. It is the right tool for trusted,
+performance-critical native code; it is categorically wrong for a "Safer NIF".
+
+The Rust->wasm32 guest, by contrast, runs inside wasmtime's sandbox: traps are
+values (`{:error, _}`), memory is bounded linear memory, and fuel bounds runtime.
+`rust/deny.toml` bans the `rustler`/`rustler_sys` crates as a build tripwire so a
+SNIF guest can never accidentally re-introduce the native path.
+
+== Consequences
+
+* Adds `rust/` workspace (3 crates) + `rust/build-wasm.sh` + `rust/deny.toml`.
+* CI adds one fail-closed verifier job (Kani + clippy + deny + import check).
+  Kani/Creusot/Prusti are dev-only and provisioned in the devcontainer/CI image;
+  they are NOT wasm runtime deps.
+* The PoC `#[global_allocator]` is a non-freeing bump arena — fine because the
+  pool re-instantiates per call (ADR-004) so linear memory resets between calls.
+  Production: swap to `lol_alloc` or `dlmalloc` (both no_std) for real reuse.
+* Still does NOT close the OPERATIONAL theorem (trap => {:error,_} ^ BEAM
+  survives over WASM semantics) — that remains TESTED, the WasmCert-Coq gap,
+  shared with the Zig guest. The Rust path inherits exactly the same isolation
+  story, no weaker and no stronger.

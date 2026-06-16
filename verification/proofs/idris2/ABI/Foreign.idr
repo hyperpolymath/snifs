@@ -146,38 +146,38 @@ allSnifExports =
 
 ||| Proof that fibonacci returns I64.
 export
-fibonacciReturnsI64 : ReturnsType specFibonacci I64
+fibonacciReturnsI64 : ReturnsType Foreign.specFibonacci I64
 fibonacciReturnsI64 = Refl
 
 ||| Proof that checked_add returns I32.
 export
-checkedAddReturnsI32 : ReturnsType specCheckedAdd I32
+checkedAddReturnsI32 : ReturnsType Foreign.specCheckedAdd I32
 checkedAddReturnsI32 = Refl
 
 ||| Proof that all crash functions return I32.
 export
-crashOobReturnsI32 : ReturnsType specCrashOob I32
+crashOobReturnsI32 : ReturnsType Foreign.specCrashOob I32
 crashOobReturnsI32 = Refl
 
 export
-crashUnreachableReturnsI32 : ReturnsType specCrashUnreachable I32
+crashUnreachableReturnsI32 : ReturnsType Foreign.specCrashUnreachable I32
 crashUnreachableReturnsI32 = Refl
 
 export
-crashPanicReturnsI32 : ReturnsType specCrashPanic I32
+crashPanicReturnsI32 : ReturnsType Foreign.specCrashPanic I32
 crashPanicReturnsI32 = Refl
 
 export
-crashOverflowReturnsI32 : ReturnsType specCrashOverflow I32
+crashOverflowReturnsI32 : ReturnsType Foreign.specCrashOverflow I32
 crashOverflowReturnsI32 = Refl
 
 export
-crashDivZeroReturnsI32 : ReturnsType specCrashDivZero I32
+crashDivZeroReturnsI32 : ReturnsType Foreign.specCrashDivZero I32
 crashDivZeroReturnsI32 = Refl
 
 ||| Proof that still_alive returns I32.
 export
-stillAliveReturnsI32 : ReturnsType specStillAlive I32
+stillAliveReturnsI32 : ReturnsType Foreign.specStillAlive I32
 stillAliveReturnsI32 = Refl
 
 --------------------------------------------------------------------------------
@@ -186,31 +186,31 @@ stillAliveReturnsI32 = Refl
 
 ||| Proof that fibonacci takes exactly 1 parameter.
 export
-fibonacciArity1 : HasArity specFibonacci 1
+fibonacciArity1 : HasArity Foreign.specFibonacci 1
 fibonacciArity1 = Refl
 
 ||| Proof that checked_add takes exactly 2 parameters.
 export
-checkedAddArity2 : HasArity specCheckedAdd 2
+checkedAddArity2 : HasArity Foreign.specCheckedAdd 2
 checkedAddArity2 = Refl
 
 ||| Proof that all crash functions take 0 parameters.
 export
-crashFunctionsArity0 : (HasArity specCrashOob 0,
-                        HasArity specCrashUnreachable 0,
-                        HasArity specCrashPanic 0,
-                        HasArity specCrashOverflow 0,
-                        HasArity specCrashDivZero 0)
+crashFunctionsArity0 : (HasArity Foreign.specCrashOob 0,
+                        HasArity Foreign.specCrashUnreachable 0,
+                        HasArity Foreign.specCrashPanic 0,
+                        HasArity Foreign.specCrashOverflow 0,
+                        HasArity Foreign.specCrashDivZero 0)
 crashFunctionsArity0 = (Refl, Refl, Refl, Refl, Refl)
 
 ||| Proof that still_alive takes 0 parameters.
 export
-stillAliveArity0 : HasArity specStillAlive 0
+stillAliveArity0 : HasArity Foreign.specStillAlive 0
 stillAliveArity0 = Refl
 
 ||| Proof that we have exactly 8 SNIF exports.
 export
-snifExportCount : length allSnifExports = 8
+snifExportCount : length Foreign.allSnifExports = 8
 snifExportCount = Refl
 
 --------------------------------------------------------------------------------
@@ -221,11 +221,11 @@ snifExportCount = Refl
 ||| We classify the 5 intentional crash functions.
 public export
 data IsCrashFunction : WasmFuncSpec -> Type where
-  CrashOob         : IsCrashFunction specCrashOob
-  CrashUnreachable : IsCrashFunction specCrashUnreachable
-  CrashPanic       : IsCrashFunction specCrashPanic
-  CrashOverflow    : IsCrashFunction specCrashOverflow
-  CrashDivZero     : IsCrashFunction specCrashDivZero
+  CrashOob         : IsCrashFunction Foreign.specCrashOob
+  CrashUnreachable : IsCrashFunction Foreign.specCrashUnreachable
+  CrashPanic       : IsCrashFunction Foreign.specCrashPanic
+  CrashOverflow    : IsCrashFunction Foreign.specCrashOverflow
+  CrashDivZero     : IsCrashFunction Foreign.specCrashDivZero
 
 ||| Proof that crash functions always have arity 0.
 export

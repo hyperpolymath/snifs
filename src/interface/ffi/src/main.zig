@@ -1,6 +1,26 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-// {{PROJECT}} FFI Implementation
+//
+// ╔════════════════════════════════════════════════════════════════════════════╗
+// ║  SCAFFOLD — UNRENDERED rsr-template, NOT A SNIF ARTIFACT. DO NOT BUILD/SHIP. ║
+// ╚════════════════════════════════════════════════════════════════════════════╝
+//
+// This file is the generic rsr-template C-FFI example (note the unreplaced
+// `{{PROJECT}}` / `{{project}}` placeholders — it does not compile as-is). It has
+// NOTHING to do with SNIF: it models a host-side init/free/handle C library, not
+// the SNIF guest. It is intentionally NOT rendered, because filling the
+// placeholders would manufacture a PHANTOM second FFI surface that contradicts the
+// real one (boundary-erosion drift we explicitly resist).
+//
+// THE REAL SNIF GUEST ABI lives in:
+//   * Implementation : zig/src/safe_nif.zig, zig/src/buffer_abi.zig (wasm32-freestanding)
+//   * Verified model : verification/proofs/idris2/ABI/{Foreign,BufferAbi,Layout,...}.idr
+//   * Drift gate      : verification/tools/abi_conformance.py  (`just abi-conformance`)
+//
+// Kept (not deleted) as the untouched rsr-template baseline for the src/interface/
+// scaffold tree; see PROOF-STATUS.md ("Scaffold (NOT counted, NOT gated)").
+// ----------------------------------------------------------------------------
+// {{PROJECT}} FFI Implementation (rsr-template example — see banner above)
 //
 // This module implements the C-compatible FFI declared in src/abi/Foreign.idr
 // All types and layouts must match the Idris2 ABI definitions.

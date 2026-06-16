@@ -1,0 +1,81 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Proof gate for SNIFS: machine-checks the formal verification artifacts.
+# If this gate is red, the repo's "proven" claim is void. It replaces the
+# previously decorative `just proof-check-*` targets, which silently passed when
+# the prover was absent (SKIP = exit 0) and used a broken idris2 invocation that
+# never resolved the ABI.* module graph — so the proofs were never actually checked.
+#
+# Toolchain is provided via Nix (nixpkgs#idris2, nixpkgs#lean4) — estate-standard,
+# reproducible, and avoids unpinned setup actions. NOTE: this consumes CI minutes;
+# if/when the bag-of-actions migration lands, this gate should move onto owned compute.
+# To make it BLOCKING, add the job names "Formal proofs — Idris2 + Lean4" AND
+# "ABI conformance — interface drift gate" to branch-protection required status
+# checks (owner-only). The ABI job (added 2026-06-16, SNIFs 2) builds the wasm
+# guests and fails if their real export signatures drift from the verified Idris2
+# ABI model (Foreign.idr + BufferAbi.idr) — closing the gap-1 interface gate in CI
+# instead of only on a local `just abi-conformance`.
+
+name: Proof Gate
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'verification/**'
+      - 'zig/**'
+      - 'Justfile'
+      - '.github/workflows/proofs.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'verification/**'
+      - 'zig/**'
+      - 'Justfile'
+      - '.github/workflows/proofs.yml'
+  workflow_dispatch:
+permissions: read-all
+concurrency:
+  group: proofs-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  proofs:
+    name: Formal proofs — Idris2 + Lean4
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Install Nix (Determinate installer)
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix \
+            | sh -s -- install --no-confirm
+
+      - name: Check Idris2 + Lean4 proofs (fail-on-skip, real invocation)
+        run: |
+          . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          nix shell nixpkgs#idris2 nixpkgs#lean4 nixpkgs#agda nixpkgs#just \
+            --command bash -c 'just proof-check-all'
+
+  abi-conformance:
+    name: ABI conformance — interface drift gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Install Nix (Determinate installer)
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix \
+            | sh -s -- install --no-confirm
+
+      - name: Build wasm guests + check ABI signatures vs the verified Idris2 model
+        run: |
+          . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          # Zig 0.15+ is required (matches the repo toolchain + the safe_nif/buffer_abi build
+          # flags). The recipe builds both guests, then the multi-guest conformance tool fails
+          # on any export-signature drift from Foreign.idr / BufferAbi.idr.
+          nix shell nixpkgs#zig nixpkgs#wasm-tools nixpkgs#python3 nixpkgs#just \
+            --command bash -c 'just abi-conformance'

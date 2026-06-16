@@ -32,7 +32,8 @@ public export
 record WasmAddr (memSize : Nat) where
   constructor MkWasmAddr
   index : Nat
-  0 inBounds : LT index memSize
+  -- un-erased: required for constructive proof of wasmAddrInBounds
+  inBounds : LT index memSize
 
 ||| Proof that a WasmAddr is always strictly less than the memory size.
 export
@@ -40,9 +41,11 @@ wasmAddrInBounds : (addr : WasmAddr memSize) -> LT addr.index memSize
 wasmAddrInBounds addr = addr.inBounds
 
 ||| Proof that if memSize > 0, then address 0 is always valid.
+||| memSize must be (S k) for `LT 0 memSize` to be inhabited; the Z case is
+||| absurd (its erased `pos : LT 0 Z` is uninhabited) so coverage stays total.
 export
 zeroAddrValid : {memSize : Nat} -> {auto 0 pos : LT 0 memSize} -> WasmAddr memSize
-zeroAddrValid = MkWasmAddr 0 pos
+zeroAddrValid {memSize = (S k)} = MkWasmAddr 0 (LTESucc LTEZero)
 
 ||| Attempt to create a WasmAddr with a runtime bounds check.
 ||| Returns Nothing if the index is out of bounds.
@@ -56,11 +59,9 @@ checkAddr index memSize = case isLT index memSize of
 ||| (We prove the specific case: checkAddr n n = Nothing for all n.)
 export
 checkAddrOutOfBounds : (n : Nat) -> checkAddr n n = Nothing
-checkAddrOutOfBounds n = rewrite ltIrrefl n in Refl
-  where
-    ltIrrefl : (k : Nat) -> isLT k k = No (succNotLTEpred k)
-    ltIrrefl Z = Refl
-    ltIrrefl (S k) = rewrite ltIrrefl k in Refl
+checkAddrOutOfBounds n with (isLT n n)
+  checkAddrOutOfBounds n | Yes prf = absurd (succNotLTEpred prf)
+  checkAddrOutOfBounds n | No _    = Refl
 
 --------------------------------------------------------------------------------
 -- Non-null Pointer Safety (for host-side handles)
@@ -73,7 +74,8 @@ public export
 record SafePtr where
   constructor MkSafePtr
   ptr : Bits64
-  {auto 0 nonNull : So (ptr /= 0)}
+  -- un-erased: required for constructive proof of safePtrNeverNull
+  {auto nonNull : So (ptr /= 0)}
 
 ||| Proof that SafePtr can never hold a null (zero) value.
 export
@@ -106,11 +108,20 @@ record WasmHandle (moduleName : String) where
   constructor MkWasmHandle
   safePtr : SafePtr
 
+||| So-proofs over the same boolean are unique (proof irrelevance for So).
+||| Needed because SafePtr now carries an un-erased nonNull witness.
+export
+soUnique : (x, y : So b) -> x = y
+soUnique Oh Oh = Refl
+
 ||| Proof that two handles with equal pointers are equal.
 export
 wasmHandlePtrEq : (h1, h2 : WasmHandle tag) ->
                   h1.safePtr.ptr = h2.safePtr.ptr -> h1 = h2
-wasmHandlePtrEq (MkWasmHandle (MkSafePtr p)) (MkWasmHandle (MkSafePtr p)) Refl = Refl
+wasmHandlePtrEq (MkWasmHandle (MkSafePtr p {nonNull = n1}))
+                (MkWasmHandle (MkSafePtr q {nonNull = n2})) prf =
+  case prf of
+    Refl => rewrite soUnique n1 n2 in Refl
 
 --------------------------------------------------------------------------------
 -- Bounded Memory Region
@@ -124,7 +135,8 @@ record MemRegion (memSize : Nat) where
   start  : Nat
   length : Nat
   0 startInBounds : LT start memSize
-  0 endInBounds   : LTE (start + length) memSize
+  -- un-erased: required for constructive proof of regionLengthBounded
+  endInBounds   : LTE (start + length) memSize
 
 ||| Proof that an empty region at a valid address is always valid.
 export
@@ -134,7 +146,15 @@ emptyRegionValid (MkWasmAddr idx prf) =
   MkMemRegion idx 0 prf (rewrite plusZeroRightNeutral idx in lteSuccLeft prf)
 
 ||| Proof that the length of a MemRegion never exceeds memSize.
+||| length <= start + length (lteAddLeft) and start + length <= memSize
+||| (endInBounds), so by transitivity length <= memSize.
 export
 regionLengthBounded : (r : MemRegion memSize) -> LTE r.length memSize
 regionLengthBounded (MkMemRegion start length startInBounds endInBounds) =
-  lteTransitive (lteAddLeft start) endInBounds
+  lteTrans (lteAddLeft start length) endInBounds
+  where
+    lteAddLeft : (s, l : Nat) -> LTE l (s + l)
+    lteAddLeft s l = rewrite plusCommutative s l in lteAddRight l
+    lteTrans : LTE a b -> LTE b c -> LTE a c
+    lteTrans LTEZero _ = LTEZero
+    lteTrans (LTESucc xy) (LTESucc yz) = LTESucc (lteTrans xy yz)

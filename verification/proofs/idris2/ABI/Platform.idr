@@ -62,13 +62,13 @@ ptrSizeValid FreeBSD64  = Right Refl
 ||| Proof that pointer size is always at least 4 bytes.
 export
 ptrSizeAtLeast4 : (p : Platform) -> LTE 4 (ptrSize p)
-ptrSizeAtLeast4 WASM32     = lteRefl
-ptrSizeAtLeast4 Linux64    = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight lteRefl)))
-ptrSizeAtLeast4 LinuxARM64 = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight lteRefl)))
-ptrSizeAtLeast4 MacOS64    = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight lteRefl)))
-ptrSizeAtLeast4 MacOSARM64 = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight lteRefl)))
-ptrSizeAtLeast4 Windows64  = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight lteRefl)))
-ptrSizeAtLeast4 FreeBSD64  = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight lteRefl)))
+ptrSizeAtLeast4 WASM32     = reflexive
+ptrSizeAtLeast4 Linux64    = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight reflexive)))
+ptrSizeAtLeast4 LinuxARM64 = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight reflexive)))
+ptrSizeAtLeast4 MacOS64    = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight reflexive)))
+ptrSizeAtLeast4 MacOSARM64 = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight reflexive)))
+ptrSizeAtLeast4 Windows64  = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight reflexive)))
+ptrSizeAtLeast4 FreeBSD64  = lteSuccRight (lteSuccRight (lteSuccRight (lteSuccRight reflexive)))
 
 --------------------------------------------------------------------------------
 -- Zig/WASM Type Size Correspondence
@@ -122,22 +122,34 @@ zigWasmSizeMatch ZigUsize = Refl
 --------------------------------------------------------------------------------
 
 ||| WASM page size in bytes (fixed by spec).
+||| re-modeled over Integer: unary Nat made the typechecker hang on 65536-scale arithmetic
 public export
-WasmPageSize : Nat
+WasmPageSize : Integer
 WasmPageSize = 65536
 
-||| Proof that WASM page size is a power of 2 (specifically 2^16).
-||| We prove this by showing 65536 = 2 * 32768 = ... = 2^16.
+||| Integer alignment of each WASM value type (mirrors wasmValAlign over Integer).
+||| WASM is 32-bit addressed, so the linear-memory size facts are faithfully
+||| stated over machine Integer and evaluate in O(1).
+public export
+wasmValAlignI : WasmValType -> Integer
+wasmValAlignI I32 = 4
+wasmValAlignI I64 = 8
+wasmValAlignI F32 = 4
+wasmValAlignI F64 = 8
+
+||| Proof that WASM page size is positive (> 0).
+||| re-modeled over Integer: unary Nat made the typechecker hang on 65536-scale arithmetic
 export
-wasmPageSizePositive : LT 0 WasmPageSize
-wasmPageSizePositive = LTESucc LTEZero
+wasmPageSizePositive : (WasmPageSize > 0) = True
+wasmPageSizePositive = Refl
 
 ||| Proof that WASM page size is a multiple of all value type alignments.
 ||| Since all alignments are 4 or 8, and 65536 = 8192 * 8 = 16384 * 4,
 ||| page boundaries are always properly aligned for any value type.
+||| re-modeled over Integer: unary Nat made the typechecker hang on 65536-scale arithmetic
 export
 wasmPageAlignedFor : (t : WasmValType) ->
-                     modNatNZ WasmPageSize (wasmValAlign t) SIsNonZero = 0
+                     mod WasmPageSize (wasmValAlignI t) = 0
 wasmPageAlignedFor I32 = Refl
 wasmPageAlignedFor I64 = Refl
 wasmPageAlignedFor F32 = Refl
@@ -145,12 +157,14 @@ wasmPageAlignedFor F64 = Refl
 
 ||| Maximum WASM32 linear memory: 4 GiB (2^32 bytes).
 ||| Expressed as number of pages.
+||| re-modeled over Integer: unary Nat made the typechecker hang on 65536-scale arithmetic
 public export
-WasmMaxPages : Nat
+WasmMaxPages : Integer
 WasmMaxPages = 65536
 
 ||| Proof that max memory = maxPages * pageSize (4 GiB).
 ||| 65536 * 65536 = 4294967296 = 2^32.
+||| re-modeled over Integer: unary Nat made the typechecker hang on 65536-scale arithmetic
 export
 wasmMaxMemory : WasmMaxPages * WasmPageSize = 4294967296
 wasmMaxMemory = Refl

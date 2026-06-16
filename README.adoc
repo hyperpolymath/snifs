@@ -2,7 +2,7 @@
 // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 // SPDX-FileCopyrightText: 2025-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
-= SNIFs: Safe Native Implemented Functions for the BEAM via WebAssembly Sandboxing
+= SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing
 
 image:https://img.shields.io/badge/OpenSSF-Best_Practices-green?logo=opensourcesecurity[OpenSSF Best Practices,link="https://www.bestpractices.dev/en/projects/new?repo_url=https://github.com/hyperpolymath/snifs"]
 image:https://img.shields.io/badge/License-MPL_2.0-blue.svg[License: MPL-2.0,link="https://opensource.org/licenses/MPL-2.0"]
@@ -24,20 +24,120 @@ image:https://img.shields.io/badge/license-PMPL--1.0--or--later-blue[License]
 
 == Overview
 
-SNIFs (Safe NIFs) demonstrates that WebAssembly sandboxing provides genuine
-crash isolation for BEAM NIFs. Any crash in a NIF normally kills the entire
-BEAM VM. This project shows that compiling native code (Zig) to WebAssembly
-and loading it through `wasmex` converts all guest faults into
-`{:error, reason}` tuples — the BEAM process survives unconditionally.
+SNIFs — *Safer (sandboxed) NIFs* — give the BEAM crash-isolated native interfaces.
+A normal NIF runs native code *inside* the VM's address space, so any fault in it
+(out-of-bounds access, overflow, `@panic`, …) kills the entire BEAM VM. A SNIF keeps
+the NIF's *interface* (you call a native-implemented function and get a value) but
+changes its *implementation*: the guest is compiled to WebAssembly (Zig and Rust today)
+and run in a `wasmtime` sandbox via `wasmex`, so a guest fault becomes a catchable
+`{:error, reason}` tuple and the calling BEAM process survives.
+
+It is a like-for-like replacement for the dominant kind of NIF — *pure native computation
+over numbers and byte-buffers* (crypto, compression, parsing, DSP, math kernels) — with two
+deliberate interface changes (the result is fallible, and only flat numeric data crosses the
+boundary; see <<scope>>). It is *not* a replacement for the full `erl_nif` surface (BEAM
+terms, resources, monitors, message-sending, dirty scheduling, zero-copy binaries, I/O).
+
+[[scope]]
+== Scope: what it replaces (and what it doesn't)
+
+A SNIF preserves the NIF *interface* and sandboxes the *implementation*. That makes it a
+genuine drop-in for one class of NIF, with clearly-stated edges:
+
+*Like-for-like (plus crash isolation):* native compute/buffer functions — the bread-and-butter
+NIF. Same call site, same native-speed class, plus isolation.
+
+*Two deliberate interface changes* (so it is not a 100% transparent swap):
+
+* The result is *fallible*: `{:ok, [values]} | {:error, reason}`. A normal NIF returns the value
+  directly or raises; here the isolation is made visible and the caller handles it.
+* Only *numbers and byte-buffers* cross. A normal NIF receives actual BEAM terms and can read
+  binaries zero-copy; a SNIF sees only `i32/i64/f32/f64` and bytes you marshal into linear memory.
+
+*Out of scope* (a SNIF does none of this — use a real NIF or a Port): BEAM-term manipulation,
+`enif_make_resource`/monitors, sending messages into the BEAM, dirty-scheduler integration/
+yielding, zero-copy term access, and any I/O (the guest is `wasm32-freestanding`, no WASI — ADR-002).
+
+So *"Safer NIFs"* is precise for *crash-isolated native compute functions*, with the scope above;
+read unqualified as "a safer version of every NIF," it would overclaim.
+
+*Scope ceiling (by design).* SNIF stops at NIF-parity + isolation — it *adapts and perfects the
+NIF*, it does not extend past it. Graduated/tunable integration, capability negotiation,
+transaction-gating and mode-dependent permissions are deliberately **not** SNIF features; they
+belong to the *cleave* (the implementation of graduated integration) and *groove* (the new
+inter-service protocol). If a good idea takes SNIF past the NIF goal, it is routed there and
+considered there, not added here.
+
+== Overhead: compute vs dispatch vs marshalling
+
+A SNIF costs more than a raw NIF (a direct in-VM call) but far less than a Port (an OS-process
+round-trip). The cost decomposes into three independent parts; which one matters depends on the
+workload:
+
+[cols="1,4",options="header"]
+|===
+| Source | Shape & cost
+| *Dispatch* (per call) | Fixed ~29 µs (median, pooled): the BEAM→sandbox boundary crossing. Dominates *tiny, high-frequency* calls; amortizes to nothing once a call does real work.
+| *Compute* | Multiplicative ~1.1–1.5× native (estimate, not yet measured for our kernels): the JIT'd, bounds-checked WASM running the actual work. The only *unamortizable* tax; dominates *long/heavy* calls. Reducible via SIMD/AOT and, ultimately, proving bounds-safety to drop runtime checks.
+| *Marshalling* | ∝ bytes: copying buffers into/out of linear memory. Dominates *data-heavy* calls; mitigated by keeping buffers resident across calls.
+|===
+
+Measured in-BEAM (OTP 25, `fibonacci(20)`, n=2000; `mix run bench/snif_bench.exs`):
+
+----
+case                          mean_µs   p50_µs    p99_µs
+per-call (compile every call)  3978.21  3571.00  10594.00   <- the naive path
+pooled   (compile once)          70.46    29.00    500.00   <- 56x faster
+buffer round-trip (sum_f32)      20.14    15.00     71.00
+Port (OS process, isolated)    1617.36  1445.00   4483.00   <- the other isolated option
+----
+
+So *pooled SNIF is ~23× cheaper than a Port* for the same crash isolation, and the "slow SNIF"
+worry (~4 ms) is purely the naive compile-every-call path — pooling removes it. For a NIF doing
+*real* work the bridge tax is a flat ~29 µs plus a modest compute multiplier; for a tiny op in a
+hot loop the ~29 µs floor dominates (batch such calls).
 
 == Key result
 
-Formal verification:
-7/7 core proofs completed (Idris2 + Lean4), covering ABI correctness and API type safety.
+*Formal verification:* 10 proofs machine-checked and CI-gated (`just proof-check-all`) — 6 Idris2
+ABI proofs (incl. the buffer-guest ABI), 1 Idris2 core-types proof, 1 Lean4 API proof, and 2 Agda
+proofs: the `SnifVerdict` echo×epistemic safety bridge (crash-isolation dichotomy, non-forgery,
+restricted deniability) *and* `SnifIsolation` / *SEC-1* — the operational crash-isolation theorem
+(host survives every outcome; deniability re-derived over the run; a 6-origin trap taxonomy),
+proven-modulo-an-explicit-runtime-TCB. *The ABI/verdict proofs verify a logical model of the
+interface; SEC-1 adds the operational layer modulo that TCB* — see <<honesty>>.
 
-11/11 integration tests pass on OTP 28.3 / Elixir 1.19.4 (verified estate-wide via `bofj-kitt/static-analysis-gate` runs that successfully load Hex 2.4.2 on this combo). The OTP 27.3 / Elixir 1.18.0 combo also passes. The earlier-flagged OTP 28 + Elixir 1.18 incompatibility (Hex `bs_add` opcode) is specific to that Elixir minor — Elixir 1.19's Hex archive is unaffected. Every failure mode
-(OOB array access, `unreachable`, `@panic`, integer overflow, divide-by-zero)
-traps correctly under `ReleaseSafe` compilation. The BEAM survives all of them.
+*In-BEAM tests:* 21/21 ExUnit pass (verified on OTP 25 / Elixir 1.18.4 — the precompiled `wasmex`
+`nif-2.15` loads fine): crash isolation across every failure mode (OOB, `@panic`, overflow,
+divide-by-zero → `{:error, _}`, caller process alive after each), the worker pool (isolation,
+no-shared-state, concurrency, Store recycling), a fuel-based liveness/DoS guard, and Zig +
+Rust→wasm32 guests at parity. Every failure mode traps correctly under `ReleaseSafe`; `ReleaseFast`
+turns the same faults into silent wrong answers (the negative control).
+
+[[honesty]]
+== Honesty: what is proven, what is tested, what is trusted
+
+The safety story is *layered*, and the name "Safer" (not "Safe") encodes the top of it:
+
+* *Proven (machine-checked):* the 10 proofs verify a *logical model* — the ABI layout, the
+  result-type algebra, and the verdict's structural properties (ok⊕trap; a trap yields no value;
+  the residue is deniable). A proof guarantees the *model* is internally consistent.
+* *The model↔code gap (NOT proven):* that the model faithfully mirrors the actual Zig/Rust/wasmex
+  code is argued by construction and established *empirically by the tests* — it is not itself
+  machine-verified. Closing it fully would need extraction or a verified toolchain.
+* *Tested (empirical):* the operational claim — *guest trap ⇒ `{:error,_}` ∧ the BEAM survives* —
+  is demonstrated by the in-BEAM tests, and is now **mechanically proven** (modulo an explicit,
+  minimal runtime TCB) in `verification/proofs/agda/SnifIsolation.agda` (`agda --safe --without-K`,
+  gated) — over a small-step host↔guest model, deriving whole-run isolation by induction from
+  per-step primitives. The residual TCB ("`wasmtime` ⊨ `FaithfulRuntime`") is the WasmCert-Coq
+  discharge that remains; this is a *gap-2* (runtime-trust) result and does **not** close *gap 1*
+  (that the Agda/Idris model faithfully mirrors the actual code).
+* *Trusted (TCB):* `wasmtime`/`wasmex` correctness, and that a returning NIF does not corrupt the
+  BEAM scheduler.
+
+Per `AUDIT.adoc`, claims here must not outrun the proofs: *"Safer"* means *crash-isolated by a
+sandbox whose isolation is tested and model-verified, trusting a stated runtime TCB* — not
+"mathematically proven safe end-to-end."
 
 == Critical invariant
 
@@ -63,7 +163,7 @@ mix deps.get
 mix test
 ----
 
-Requires Elixir 1.15+, OTP 26+ (precompiled wasmex NIF downloaded automatically). The OTP 28 + Elixir 1.18 combination is unsupported (the Elixir-1.18-specific Hex archive fails to load on OTP 28 with `bs_add` BEAM bytecode errors), but OTP 28.3 + Elixir 1.19.4 works fine. Either OTP 27.3 + Elixir 1.18 or OTP 28.3 + Elixir 1.19 is a known-good combo.
+Requires Elixir 1.15+, *OTP 25+* (the precompiled `wasmex` 0.14 `nif-2.15` artifact loads on OTP 25 through 28 — verified on OTP 25 / Elixir 1.18.4; the earlier "OTP 26+" floor was conservative). Pooled use is wired via the application supervisor (`SnifDemo.Application`); the legacy per-call `Loader` needs no pool.
 
 == Rebuilding the WASM
 
@@ -93,7 +193,7 @@ If you use this work, please cite:
 ----
 @misc{jewell2026snifs,
   author = {Jewell, Jonathan D. A.},
-  title = {SNIFs: Safe Native Implemented Functions for the BEAM via WebAssembly Sandboxing},
+  title = {SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing},
   year = {2026},
   doi = {10.5281/zenodo.19520245},
   publisher = {Zenodo}

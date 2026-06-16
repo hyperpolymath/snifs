@@ -1,7 +1,7 @@
 % SPDX-License-Identifier: MPL-2.0
 % Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 %
-% SNIFs: Safe Native Implemented Functions for the BEAM via WebAssembly Sandboxing
+% SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing
 % Prepared for Zenodo deposit.
 
 \documentclass[11pt,a4paper]{article}
@@ -74,7 +74,7 @@
 }
 
 %%% Metadata %%%
-\title{\textbf{SNIFs: Safe Native Implemented Functions for the BEAM\\
+\title{\textbf{SNIFs: Safer Native Implemented Functions for the BEAM\\
        via WebAssembly Sandboxing}}
 \author{Jonathan D.A. Jewell\\
         \small The Open University\\
@@ -91,7 +91,7 @@ inescapable risk: any crash in a NIF kills the entire VM process, defeating
 the BEAM's celebrated fault-isolation guarantees. Dirty NIFs address scheduling
 fairness but provide no crash isolation. Port-based solutions achieve isolation
 at the cost of a process boundary---at which point the primitive is no longer a
-NIF. We present \textit{SNIFs} (Safe NIFs): an architecture that compiles native
+NIF. We present \textit{SNIFs} (Safer NIFs): an architecture that compiles native
 code to WebAssembly, loads it through an embedded Wasmtime runtime (via the
 \texttt{wasmex} library), and catches all guest faults as \texttt{\{:error,
 reason\}} tuples before they reach the BEAM scheduler. We provide an empirical

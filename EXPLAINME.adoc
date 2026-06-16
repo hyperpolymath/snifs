@@ -4,7 +4,7 @@
 :toc: preamble
 :icons: font
 
-This file provides code-level evidence and implementation details for the SNIF (Safe Native Implemented Functions) architecture.
+This file provides code-level evidence and implementation details for the SNIF (Safer Native Implemented Functions) architecture.
 
 == Claim-to-implementation map
 
@@ -28,20 +28,53 @@ ____
 How this is implemented::
 The `Justfile` build recipes enforce `-OReleaseSafe` for all `priv/*.wasm` artifacts, ensuring that bounds checks are preserved in the binary.
 
-== Relationship to Groove/Cleave
+== Scope ceiling: a safer NIF, and nothing past it
 
-SNIFs provide the **Physical Cleave Surface**. While the **Groove Protocol** defines "how services talk" (communication), the SNIF architecture defines **"how they touch"** (integration). By sandboxing native code in WASM, we ensure that the "join" between high-performance logic and the safe host environment is mathematically isolated and safe to "split."
+SNIF deliberately stops at *NIF-parity + crash-isolation*. The goal is to **adapt and
+perfect something that already exists** — the BEAM NIF — for the people who already use
+NIFs: a safer, like-for-like drop-in for native compute/buffer functions (see the README
+`Scope` section), *not* a new interface paradigm. Capabilities that go **beyond** what a
+NIF offers — graduated/tunable integration, capability negotiation, transaction-gating,
+permissions that depend on an integration "mode" — are **out of SNIF scope by design**. If
+an idea is good but takes us past the NIF goal, it belongs to the *cleave* and *groove*
+layers below, and is considered there, not bolted onto SNIF.
 
-== Repository Future: The Universal Pattern Hub
+== Relationship to Groove and the Cleave
 
-Per the v0.5 reposystem roadmap, this repository is transitioning from an Elixir-only research project into the **Universal Pattern Hub** for all Safe Native Interfaces across the estate (Rust/SPARK, Zig, and Ada).
+Three distinct layers; SNIF is the most conservative of them:
+
+* **SNIF — _perfecting an existing interface._** A SNIF **realizes a residue-clean cleave
+  _instance_ at one boundary** (BEAM host ↔ native guest): a guest trap becomes
+  `{:error, reason}`, the BEAM survives, and the error residue carries no recoverable guest
+  value (the `SnifVerdict` deniability proofs). It is *an* instance of a cleave, **not "the
+  cleave"** — the earlier phrasing "SNIFs provide the Physical Cleave Surface" overstated
+  this and is corrected here.
+* **Cleave — _the new implementation of graduated integration._** A transmutable surface
+  you can dial from near-raw FFI-ABI, through the SNIF sandbox (the safe *middle detent*),
+  to a tight Groove-defined internal-api; closeable to a standalone secure surface. SNIF
+  sits at the middle; the rest of the dial (transaction-gating, mode-indexed permissions,
+  the well-founded "staircase" teardown) is **cleave scope, not SNIF scope**.
+* **Groove — _something new, to move beyond current interface design._** The protocol for
+  *how services talk*: capability discovery + typed capability negotiation, soft (pub/sub)
+  ↔ hard (in-process) integration modes. SNIF merely *consumes* Groove as a communication
+  counterpart, and only at the v0.2 roadmap level — snifs ships no Groove code today.
+
+== Multi-language guests (still within the safer-NIF goal)
+
+The safer-NIF pattern is realizable across guest languages — Zig today, Rust→wasm32 wired,
+Ada/SPARK and estate wasm-native languages (typed-wasm/ephapax/affinescript) prospective.
+This is *breadth of guest language within the NIF goal*, **not** an expansion of SNIF's
+purpose. SNIF is not a "universal interface hub"; that "beyond current interface design"
+ambition lives in groove/cleave, not here.
 
 == Evidence Index
 
 [cols="2,3", options="header"]
 |===
 | Path | Proves
-| `zig/src/safe_nif.zig` | Implementation of trapped failure modes.
-| `demo/test/snif_test.exs` | Integration tests verifying BEAM survival.
-| `manifest.scm` | Guix environment for reproducible WASM builds.
+| `zig/src/safe_nif.zig` | Implementation of trapped failure modes (8 exports, ABI-modelled).
+| `demo/test/snif_demo_test.exs` | Integration tests verifying BEAM survival across every crash mode.
+| `verification/proofs/agda/SnifIsolation.agda` | SEC-1 operational crash-isolation, proven-modulo-explicit-TCB.
+| `verification/proofs/agda/SnifVerdict.agda` | Residue-clean (deniability) + non-forgery at the boundary.
+| `verification/tools/abi_conformance.py` | Model↔binary ABI drift gate (interface-level).
 |===

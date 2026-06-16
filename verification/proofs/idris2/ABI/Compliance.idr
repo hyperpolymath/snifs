@@ -20,6 +20,7 @@ import ABI.Layout
 import ABI.Platform
 import ABI.Foreign
 import Data.List
+import Data.Nat
 
 %default total
 
@@ -47,14 +48,18 @@ data AllFieldsInBounds : (size : Nat) -> List StructField -> Type where
 public export
 record CABICompliant (layout : StructLayout) where
   constructor MkCompliant
-  fieldsAligned  : AllFieldsAligned (layoutFields layout)
-  fieldsInBounds : AllFieldsInBounds (layoutSize layout) (layoutFields layout)
-  sizeAligned    : modNatNZ (layoutSize layout) (layoutAlignment layout) SIsNonZero = 0
+  fieldsAligned   : AllFieldsAligned (layoutFields layout)
+  fieldsInBounds  : AllFieldsInBounds (layoutSize layout) (layoutFields layout)
+  -- The alignment must be nonzero for divisibility to be meaningful; this erased
+  -- witness supplies `modNatNZ`'s NonZero argument for the abstract alignment
+  -- (the divisor does not reduce to `S _`, so the deprecated SIsNonZero cannot solve it).
+  alignmentNonZero : NonZero (layoutAlignment layout)
+  sizeAligned     : modNatNZ (layoutSize layout) (layoutAlignment layout) alignmentNonZero = 0
 
 ||| An empty struct is trivially compliant (size=1, alignment=1).
 export
 emptyStructCompliant : CABICompliant (MkLayout "empty" [] 1 1)
-emptyStructCompliant = MkCompliant AFANil AFBNil Refl
+emptyStructCompliant = MkCompliant AFANil AFBNil ItIsSucc Refl
 
 --------------------------------------------------------------------------------
 -- Scalar Function ABI Compliance
@@ -76,38 +81,38 @@ data ScalarABICompliant : WasmFuncSpec -> Type where
 
 ||| Proof that fibonacci is scalar ABI compliant.
 export
-fibonacciCompliant : ScalarABICompliant specFibonacci
+fibonacciCompliant : ScalarABICompliant Foreign.specFibonacci
 fibonacciCompliant = MkScalarCompliant specFibonacci
 
 ||| Proof that checked_add is scalar ABI compliant.
 export
-checkedAddCompliant : ScalarABICompliant specCheckedAdd
+checkedAddCompliant : ScalarABICompliant Foreign.specCheckedAdd
 checkedAddCompliant = MkScalarCompliant specCheckedAdd
 
 ||| Proof that all crash functions are scalar ABI compliant.
 export
-crashOobCompliant : ScalarABICompliant specCrashOob
+crashOobCompliant : ScalarABICompliant Foreign.specCrashOob
 crashOobCompliant = MkScalarCompliant specCrashOob
 
 export
-crashUnreachableCompliant : ScalarABICompliant specCrashUnreachable
+crashUnreachableCompliant : ScalarABICompliant Foreign.specCrashUnreachable
 crashUnreachableCompliant = MkScalarCompliant specCrashUnreachable
 
 export
-crashPanicCompliant : ScalarABICompliant specCrashPanic
+crashPanicCompliant : ScalarABICompliant Foreign.specCrashPanic
 crashPanicCompliant = MkScalarCompliant specCrashPanic
 
 export
-crashOverflowCompliant : ScalarABICompliant specCrashOverflow
+crashOverflowCompliant : ScalarABICompliant Foreign.specCrashOverflow
 crashOverflowCompliant = MkScalarCompliant specCrashOverflow
 
 export
-crashDivZeroCompliant : ScalarABICompliant specCrashDivZero
+crashDivZeroCompliant : ScalarABICompliant Foreign.specCrashDivZero
 crashDivZeroCompliant = MkScalarCompliant specCrashDivZero
 
 ||| Proof that still_alive is scalar ABI compliant.
 export
-stillAliveCompliant : ScalarABICompliant specStillAlive
+stillAliveCompliant : ScalarABICompliant Foreign.specStillAlive
 stillAliveCompliant = MkScalarCompliant specStillAlive
 
 --------------------------------------------------------------------------------
@@ -123,7 +128,7 @@ data AllScalarCompliant : List WasmFuncSpec -> Type where
 
 ||| Proof that all 8 SNIF exports are scalar ABI compliant.
 export
-allSnifExportsCompliant : AllScalarCompliant allSnifExports
+allSnifExportsCompliant : AllScalarCompliant Foreign.allSnifExports
 allSnifExportsCompliant =
   ASCCons fibonacciCompliant $
   ASCCons checkedAddCompliant $
@@ -158,13 +163,24 @@ public export
 arrayTotalBytes : WasmArrayLayout -> Nat
 arrayTotalBytes arr = arr.elemCount * wasmValSize arr.elemType
 
+||| Every element alignment is a WASM value alignment (always 4 or 8), hence nonzero.
+||| Supplies the erased nonzero witness for `modNatNZ` without forcing the abstract
+||| `wasmValAlign (elemType arr)` to reduce to a literal `S _`. Mirrors
+||| `Layout.fieldAlignmentNonZero`.
+public export
+elemAlignmentNonZero : (arr : WasmArrayLayout) -> NonZero (wasmValAlign (elemType arr))
+elemAlignmentNonZero (MkWasmArrayLayout I32 _ _) = ItIsSucc
+elemAlignmentNonZero (MkWasmArrayLayout I64 _ _) = ItIsSucc
+elemAlignmentNonZero (MkWasmArrayLayout F32 _ _) = ItIsSucc
+elemAlignmentNonZero (MkWasmArrayLayout F64 _ _) = ItIsSucc
+
 ||| An array layout is valid when:
 ||| 1. Base offset is aligned to element alignment
 ||| 2. Total bytes fit within memory size
 public export
 record WasmArrayValid (memSize : Nat) (arr : WasmArrayLayout) where
   constructor MkArrayValid
-  baseAligned : modNatNZ (baseOffset arr) (wasmValAlign (elemType arr)) SIsNonZero = 0
+  baseAligned : modNatNZ (baseOffset arr) (wasmValAlign (elemType arr)) (elemAlignmentNonZero arr) = 0
   fitsInMem   : LTE (baseOffset arr + arrayTotalBytes arr) memSize
 
 ||| Proof that an empty array at offset 0 is always valid (for any memSize > 0).
@@ -172,4 +188,9 @@ export
 emptyArrayValid : {memSize : Nat} -> {auto 0 pos : LT 0 memSize} ->
                   (t : WasmValType) ->
                   WasmArrayValid memSize (MkWasmArrayLayout t 0 0)
-emptyArrayValid t = MkArrayValid Refl (lteSuccLeft pos)
+-- Case-split on `t` so `wasmValAlign t` reduces to a literal, letting
+-- `modNatNZ 0 _ _ = 0` close by Refl; valid for every element type.
+emptyArrayValid I32 = MkArrayValid Refl LTEZero
+emptyArrayValid I64 = MkArrayValid Refl LTEZero
+emptyArrayValid F32 = MkArrayValid Refl LTEZero
+emptyArrayValid F64 = MkArrayValid Refl LTEZero
