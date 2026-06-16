@@ -59,7 +59,7 @@ just proof-status         # summary of proven / tested / trusted
 [source]
 ----
 snifs/
-├── zig/src/safe_nif.zig       # the SNIF kernel — six trapped crash modes
+├── zig/src/safe_nif.zig       # the SNIF kernel — five trapped crash modes
 ├── zig/                       # safe_nif / buffer_abi / burble_fft guests
 ├── rust/ , rust-guest/        # Rust→wasm32 guests (dual-sourced; see Dustfile)
 ├── demo/                      # Mix project: wasmex loader + ExUnit suite
@@ -94,11 +94,11 @@ just proof-check-all  # all proofs still check
 just assail           # no new security findings
 ----
 
-Commits must be **signed**. See `CONTRIBUTING.md` for the signing-key policy.
+Commits must be *signed*. See `CONTRIBUTING.md` for the contribution flow.
 
 == LLM / AI Agent Development
 
-Read `0-AI-MANIFEST.a2ml` and `.claude/CLAUDE.md` first, then `PROOF-STATUS.md`
+Read `0-AI-MANIFEST.a2ml` first, then `PROOF-STATUS.md`
 before making any claim about what is proven.
 
 == Get Help
