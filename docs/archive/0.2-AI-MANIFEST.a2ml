@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: MPL-2.0
+---
+### [META]
+id: "archive"
+level: 2
+parent: "../0.1-AI-MANIFEST.a2ml"
+
+---
+### [AI_MANIFEST]
+description: |
+  Frozen historical documents kept for provenance — point-in-time audits and
+  superseded snapshots. Files here are NOT maintained; their claims reflect the
+  date they were written, not current repository state.
+
+canonical_locations:
+  template_standards_audit: "TEMPLATE-STANDARDS-AUDIT.adoc"
+
+invariants:
+  - "Archived documents are append-only history; do not edit their content to match current state."
+  - "If a current equivalent exists, link to it rather than updating the archived copy."
