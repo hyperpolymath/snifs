@@ -14,6 +14,7 @@ description: |
 
 canonical_locations:
   template_standards_audit: "TEMPLATE-STANDARDS-AUDIT.adoc"
+  superseded_paper: "snifs.tex"
 
 invariants:
   - "Archived documents are append-only history; do not edit their content to match current state."
