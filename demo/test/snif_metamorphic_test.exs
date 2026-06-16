@@ -62,40 +62,36 @@ defmodule SnifMetamorphicTest do
     assert val!("fibonacci", [46]) == 1_836_311_903
   end
 
-  # ── checked_add: a WRAPPING i32 add (`a +% b`, intentional per zig/src/safe_nif.zig) ──
+  # ── checked_add: a genuinely CHECKED i32 add — overflow TRAPS (see zig/src/safe_nif.zig) ──
   #
-  # NOTE: the export name "checked_add" is a MISNOMER in the guest source — it is two's-
-  # complement WRAPPING addition, not a trapping/checked one (the trapping overflow demo is
-  # the separate `crash_overflow`). This gate verifies the kernel's ACTUAL behaviour: the
-  # i32 modular ring. (Finding surfaced by this very gate — see PROOF-STATUS GAP-1b.)
+  # The guest computes a + b via `@addWithOverflow` and hits `unreachable` on overflow, so an
+  # overflowing call FAULTS (-> {:error, _}, BEAM survives) instead of returning a value; a
+  # non-overflowing call returns the exact sum. (History: this export was a wrapping `a +% b`
+  # despite its name — the misnomer this gate originally surfaced — and was then made genuinely
+  # checked, the behaviour the name promises. See PROOF-STATUS GAP-1b.)
 
-  # Signed-i32 wrap of an arbitrary integer (the +% oracle).
-  defp wrap32(x) do
-    import Bitwise
-    m = band(x, 0xFFFFFFFF)
-    if m >= 0x8000_0000, do: m - 0x1_0000_0000, else: m
-  end
+  # Does a + b overflow signed i32? (arbitrary-precision host-side oracle.)
+  defp overflows_i32?(a, b), do: a + b > @i32_max or a + b < @i32_min
 
-  test "checked_add METAMORPHIC commutativity: add(a,b) = add(b,a) (incl. boundary)" do
-    pairs = [{1, 2}, {-5, 9}, {1000, 24}, {-7, -8}, {@i32_max, 1}, {@i32_min, -1}]
+  test "checked_add METAMORPHIC commutativity on non-overflowing pairs: add(a,b) = add(b,a)" do
+    pairs = [{1, 2}, {-5, 9}, {1000, 24}, {-7, -8}, {@i32_max - 3, 2}, {@i32_min + 3, -2}]
 
     Enum.each(pairs, fn {a, b} ->
+      refute overflows_i32?(a, b), "test pair (#{a},#{b}) must not overflow"
       assert val!("checked_add", [a, b]) == val!("checked_add", [b, a]),
              "commutativity broken at (#{a},#{b})"
     end)
   end
 
-  test "checked_add METAMORPHIC identity: add(a,0) = a and add(0,a) = a" do
+  test "checked_add METAMORPHIC identity: add(a,0) = a and add(0,a) = a (adding 0 never overflows)" do
     Enum.each([0, 1, -1, 42, -42, @i32_max, @i32_min], fn a ->
       assert val!("checked_add", [a, 0]) == a
       assert val!("checked_add", [0, a]) == a
     end)
   end
 
-  test "checked_add METAMORPHIC associativity EVERYWHERE (modular ring, incl. boundary)" do
-    # Wrapping add is associative for ALL inputs (it is the Z/2^32 ring), unlike a trapping
-    # add — so boundary triples that would trap a checked add must still associate here.
-    triples = [{1, 2, 3}, {-4, 5, -6}, {@i32_max, 1, 1}, {@i32_min, -1, -1}, {@i32_max, @i32_max, 2}]
+  test "checked_add METAMORPHIC associativity where no intermediate overflows" do
+    triples = [{1, 2, 3}, {-4, 5, -6}, {100, 200, 300}, {-1, -1, -1}]
 
     Enum.each(triples, fn {a, b, c} ->
       left = val!("checked_add", [val!("checked_add", [a, b]), c])
@@ -104,21 +100,29 @@ defmodule SnifMetamorphicTest do
     end)
   end
 
-  test "checked_add WRAPS at the i32 boundary (the defining +% behaviour, vs a trapping add)" do
-    # i32_max + 1 wraps to i32_min; i32_min + (-1) wraps to i32_max — a TRUE value, not {:error}.
-    assert val!("checked_add", [@i32_max, 1]) == @i32_min
-    assert val!("checked_add", [@i32_min, -1]) == @i32_max
-    # ...and one short of the boundary does not wrap.
+  test "checked_add is CHECKED: overflow at the boundary TRAPS (BEAM survives); just-below does not" do
+    # The defining behaviour: i32_max + 1 and i32_min + (-1) FAULT, they do not wrap.
+    assert {:error, _} = Loader.call(@safe, "checked_add", [@i32_max, 1])
+    assert {:error, _} = Loader.call(@safe, "checked_add", [@i32_min, -1])
+    assert {:error, _} = Loader.call(@safe, "checked_add", [@i32_max, @i32_max])
+    # ...one short of the boundary is fine (so it is not "always traps").
     assert val!("checked_add", [@i32_max - 1, 1]) == @i32_max
     assert val!("checked_add", [@i32_min + 1, -1]) == @i32_min
+    # ...and the boundary trap did not take the BEAM with it.
+    assert val!("still_alive", []) == 42
   end
 
-  test "checked_add ORACLE: add(a,b) = wrap32(a+b) across a boundary-spanning family" do
+  test "checked_add ORACLE: non-overflow = exact sum; overflow = {:error,_}, over a boundary family" do
     family = [-3, -1, 0, 1, 3, @i32_max - 1, @i32_max, @i32_min, @i32_min + 1, 1_000_000_000]
 
     for a <- family, b <- family do
-      assert val!("checked_add", [a, b]) == wrap32(a + b),
-             "modular mismatch at (#{a},#{b})"
+      if overflows_i32?(a, b) do
+        assert {:error, _} = Loader.call(@safe, "checked_add", [a, b]),
+               "expected a trap on overflow at (#{a},#{b})"
+      else
+        assert val!("checked_add", [a, b]) == a + b,
+               "expected the exact sum at (#{a},#{b})"
+      end
     end
   end
 end

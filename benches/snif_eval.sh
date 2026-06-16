@@ -146,12 +146,13 @@ invoke "$SAFE" fibonacci 20; fib_safe="$G_OUT"
 invoke "$FAST" fibonacci 20; fib_fast="$G_OUT"
 add_row "{\"kind\":\"control\",\"fn\":\"fibonacci(20)\",\"safe_out\":$(jstr "$fib_safe"),\"fast_out\":$(jstr "$fib_fast"),\"expect\":\"6765\"}"
 
-# checked_add uses wrapping (+%) by design: i32::MAX + 1 wraps in BOTH modes (NOT
-# a trap) — this is intentional and documented in the source. Record it so the
-# table shows the deliberate wrap rather than implying it is a discrimination row.
-invoke "$SAFE" checked_add 2147483647 1; ca_safe="$G_OUT"
-invoke "$FAST" checked_add 2147483647 1; ca_fast="$G_OUT"
-add_row "{\"kind\":\"control\",\"fn\":\"checked_add(MAX,1)\",\"safe_out\":$(jstr "$ca_safe"),\"fast_out\":$(jstr "$ca_fast"),\"expect\":\"-2147483648 (intentional wrap, both modes)\"}"
+# checked_add is genuinely CHECKED: a non-overflowing add returns the exact sum
+# (this control row uses MAX-1 + 1 = MAX). An OVERFLOWING call (e.g. MAX + 1) FAULTS
+# in BOTH modes (overflow -> `unreachable` -> WASM trap), unlike crash_overflow which
+# only traps under ReleaseSafe — so this is a value row, not a discrimination row.
+invoke "$SAFE" checked_add 2147483646 1; ca_safe="$G_OUT"
+invoke "$FAST" checked_add 2147483646 1; ca_fast="$G_OUT"
+add_row "{\"kind\":\"control\",\"fn\":\"checked_add(MAX-1,1)\",\"safe_out\":$(jstr "$ca_safe"),\"fast_out\":$(jstr "$ca_fast"),\"expect\":\"2147483647 (exact sum; an overflowing add would trap in both modes)\"}"
 
 # ── (4) liveness / DoS guard (language-agnostic) ──────────────────────────────
 # Too little fuel -> deterministic "all fuel consumed" trap; enough -> result.
@@ -279,7 +280,7 @@ fmt_num() { printf "%.3f" "$1" 2>/dev/null || printf "%s" "$1"; }
   printf " %-22s | %-13s | %-13s | %s\n" "fn" "Safe" "Fast" "expect"
   printf " %-22s | %-13s | %-13s | %s\n" "still_alive"        "$sa_safe"  "$sa_fast"  "42"
   printf " %-22s | %-13s | %-13s | %s\n" "fibonacci(20)"      "$fib_safe" "$fib_fast" "6765"
-  printf " %-22s | %-13s | %-13s | %s\n" "checked_add(MAX,1)" "$ca_safe"  "$ca_fast"  "-2147483648 (intentional wrap)"
+  printf " %-22s | %-13s | %-13s | %s\n" "checked_add(MAX-1,1)" "$ca_safe"  "$ca_fast"  "2147483647 (exact sum; overflow traps)"
   echo
   echo " (4) LIVENESS / DoS GUARD  —  fuel (the wasmex-0.14 mechanism)"
   echo " -------------------------------------------------------------------------------------------"
