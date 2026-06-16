@@ -3,7 +3,7 @@
 ### [META]
 id: "governance-pillar"
 level: 1
-parent: "../0-AI-MANIFEST.a2ml"
+parent: "../0.1-AI-MANIFEST.a2ml"
 
 ---
 ### [AI_MANIFEST]
