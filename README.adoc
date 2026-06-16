@@ -5,23 +5,18 @@
 = SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing
 :toc: preamble
 :icons: font
+:source-highlighter: highlight.js
 
 image:https://img.shields.io/badge/OpenSSF-Best_Practices-green?logo=opensourcesecurity[OpenSSF Best Practices,link="https://www.bestpractices.dev/en/projects/new?repo_url=https://github.com/hyperpolymath/snifs"]
 image:https://img.shields.io/badge/License-MPL_2.0-blue.svg[License: MPL-2.0,link="https://opensource.org/licenses/MPL-2.0"]
 image:https://api.thegreenwebfoundation.org/greencheckimage/github.com[Green Web,link="https://www.thegreenwebfoundation.org/green-web-check/?url=github.com"]
-
-https://doi.org/10.5281/zenodo.19680824
+image:https://zenodo.org/badge/DOI/10.5281/zenodo.19520245.svg[DOI,link=https://doi.org/10.5281/zenodo.19520245]
 
 This repository contains:
 (1) the SNIF architecture paper,
 (2) a working BEAM + WASM implementation,
 (3) integration tests and benchmarking,
 (4) formal verification artifacts.
-Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-:toc:
-:source-highlighter: highlight.js
-
-image:https://zenodo.org/badge/DOI/10.5281/zenodo.19520245.svg[DOI,link=https://doi.org/10.5281/zenodo.19520245]
 image:https://img.shields.io/badge/license-PMPL--1.0--or--later-blue[License]
 
 == Overview
@@ -84,7 +79,7 @@ workload:
 | *Marshalling* | ∝ bytes: copying buffers into/out of linear memory. Dominates *data-heavy* calls; mitigated by keeping buffers resident across calls.
 |===
 
-Measured in-BEAM (OTP 25, `fibonacci(20)`, n=2000; `mix run bench/snif_bench.exs`):
+Measured in-BEAM (OTP 25, `fibonacci(20)`, n=2000; from `demo/`, `mix run bench/snif_bench.exs`):
 
 ----
 case                          mean_µs   p50_µs    p99_µs
@@ -150,7 +145,7 @@ verified — see paper).
 == Repository layout
 
 ----
-zig/src/safe_nif.zig     Zig source with six crash modes + fibonacci
+zig/src/safe_nif.zig     Zig source with five crash modes + fibonacci
 priv/*.wasm              Pre-built WASM binaries (ReleaseSafe + ReleaseFast)
 demo/                    Mix project with wasmex loader + ExUnit test suite
 docs/whitepapers/        LaTeX paper + compiled PDF
