@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 [project]
-name = "rsr-template-repo"
+name = "snifs"
 
 [[functions]]
 name = "build"

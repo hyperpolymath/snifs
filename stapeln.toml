@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: MPL-2.0
-# stapeln.toml — Layer-based container build for rsr-template-repo
+# stapeln.toml — Layer-based container build for snifs
 #
 # stapeln builds containers as composable layers (German: "to stack").
 # Each layer is independently cacheable, verifiable, and signable.
 
 [metadata]
-name = "rsr-template-repo"
+name = "snifs"
 version = "0.1.0"
-description = "rsr-template-repo container service"
+description = "snifs container service"
 author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
 license = "MPL-2.0"
 registry = "ghcr.io/hyperpolymath"
@@ -32,7 +32,7 @@ packages = []
 cache = true
 
 [layers.build]
-description = "rsr-template-repo build"
+description = "snifs build"
 extends = "toolchain"
 commands = []
 
@@ -43,7 +43,7 @@ packages = ["ca-certificates", "curl"]
 copy-from = [
     { layer = "build", src = "/app/", dst = "/app/" },
 ]
-entrypoint = ["/app/rsr-template-repo"]
+entrypoint = ["/app/snifs"]
 user = "nonroot"
 
 # ── Security ───────────────────────────────────────────────────

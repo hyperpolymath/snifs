@@ -9,8 +9,8 @@ version = "0.1.0"
 last-updated = "2026-04-11"
 
 [project]
-name = "rsr-template-repo"
-purpose = ""  # TODO: describe project purpose
+name = "snifs"
+purpose = "Safer NIFs: crash-isolated native interfaces for the BEAM via WebAssembly sandboxing."
 role = ""  # TODO: describe project role  # e.g. ffi-infrastructure, cli-tool, library, service
 
 [position-in-ecosystem]
