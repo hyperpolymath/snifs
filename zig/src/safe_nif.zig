@@ -49,13 +49,17 @@ export fn fibonacci(n: i32) i64 {
     return b;
 }
 
-/// Two's-complement WRAPPING i32 addition (`a +% b`). NOTE: despite the historical name
-/// `checked_add`, this does NOT trap on overflow — it wraps (i32_max + 1 = i32_min), in BOTH
-/// ReleaseSafe and ReleaseFast (`+%` is defined wrapping, not UB, so the build mode is irrelevant).
-/// The trapping-overflow demo is `crash_overflow`. Behaviour pinned by the GAP-1b metamorphic
-/// `wrap32` oracle in `demo/test/snif_metamorphic_test.exs`.
+/// Genuinely CHECKED i32 addition (the name now matches the behaviour). On overflow the guest
+/// TRAPS: `@addWithOverflow` computes the result + an overflow bit with no UB, and on overflow we
+/// hit `unreachable`, which in this wasm32-freestanding target emits the WASM `unreachable`
+/// instruction and traps in ALL build modes (-> wasmex `{:error, _}`, BEAM survives) — like
+/// `crash_unreachable`, and unlike `crash_overflow` which only traps under ReleaseSafe. With no
+/// overflow it returns the exact sum. Behaviour pinned by the GAP-1b metamorphic boundary-trap
+/// oracle in `demo/test/snif_metamorphic_test.exs`.
 export fn checked_add(a: i32, b: i32) i32 {
-    return a +% b; // wrapping add — intentional; see the doc-comment above
+    const r = @addWithOverflow(a, b);
+    if (r[1] != 0) unreachable; // overflow -> WASM unreachable -> trap
+    return r[0];
 }
 
 // --- Crash isolation demos ---

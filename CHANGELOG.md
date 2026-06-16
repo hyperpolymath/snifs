@@ -25,10 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   invocation (no `--source-dir`, never resolved the `ABI.*` graph) and silently passed
   when the prover was absent (SKIP = exit 0). Now uses the correct invocation and
   fails-on-skip.
-- **`checked_add` doc-comment corrected.** The comment claimed "overflow -> trap" but the body is
-  `a +% b` (wrapping); the GAP-1b metamorphic gate surfaced the contradiction. The comment now
-  states the wrapping behaviour accurately (the trapping-overflow demo is `crash_overflow`); the
-  export name is unchanged.
+- **`checked_add` made genuinely checked.** The export was a wrapping `a +% b` despite its name
+  (the GAP-1b metamorphic gate surfaced the misnomer). It is now a real checked add: overflow
+  TRAPS (`@addWithOverflow` + `unreachable` → WASM trap → `{:error, _}`, BEAM survives) in all
+  build modes, and a non-overflowing add returns the exact sum. Signature unchanged (the ABI gate
+  stays green); the metamorphic oracle now asserts trap-on-overflow.
 
 ### Changed
 - Project gloss **"Safe NIFs" → "Safer NIFs"** (acronym SNIF unchanged): WASM sandboxing
@@ -51,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Zig export sites; `verification/tools/abi_conformance.py` is now guest-aware (per-guest model
   manifest, multi-value/void parsing). The conformance gate now runs in CI (`proofs.yml`, CI-1).
 - **GAP-1b behaviour gate.** `demo/test/snif_metamorphic_test.exs` — dependency-free metamorphic
-  relations over the scalar kernels (fibonacci recurrence + base cases; `checked_add` `wrap32`
-  oracle + boundary-wrap).
+  relations over the scalar kernels (fibonacci recurrence + base cases; `checked_add`
+  non-overflow = exact-sum / overflow = trap oracle).
 - `AFFIRMATION.adoc` — point-in-time, ground-truthed honesty snapshot (the README/EXPLAINME/AFFIRMATION
   trio); SPDX header parked for the owner to add + sign.
