@@ -114,3 +114,11 @@ deps/
 .cache/
 build/
 dist/
+
+# Proof + guest build artifacts (snifs)
+*.agdai
+/benches/eval_tmp/
+/benches/eval_results.json
+/demo/priv/*.wasm
+/priv/snif_eval.json
+/zig/buffer_abi_build/
