@@ -2,7 +2,7 @@
 SPDX-License-Identifier: MPL-2.0
 Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 -->
-<!-- Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} (hyperpolymath) <{{AUTHOR_EMAIL}}> -->
+<!-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk> -->
 <!-- Authoritative source: docs/AI-CONVENTIONS.md -->
 
 # Copilot Instructions
@@ -16,7 +16,7 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 - SPDX: `MPL-2.0` on all new files.
 - Never use AGPL-3.0.
-- Copyright: `{{AUTHOR}} (hyperpolymath) <{{AUTHOR_EMAIL}}>`
+- Copyright: `Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>`
 
 ## Code Style
 

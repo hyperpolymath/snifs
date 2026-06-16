@@ -10,7 +10,7 @@
   (version "1.0")
 
   ; Service identity — replace snif with your project name
-  (service "snif")
+  (service "snifs")
   (service-version "0.1.0")
 
   ; Primary port — MUST be unique across the ecosystem.

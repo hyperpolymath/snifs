@@ -2,9 +2,9 @@
 SPDX-License-Identifier: MPL-2.0
 Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 -->
-# LLM Warmup — rsr-template-repo (Developer)
+# LLM Warmup — snifs (Developer)
 
-## What is rsr-template-repo?
+## What is snifs?
 See README.adoc for overview.
 
 ## Key Commands

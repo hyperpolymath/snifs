@@ -2,7 +2,7 @@
 ;; META.a2ml — snif meta
 
 (meta
-  (project "snif")
+  (project "snifs")
   (full-name "SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing")
   (license "MPL-2.0")
   (author "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>")

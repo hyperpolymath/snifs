@@ -1,36 +1,40 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-= {{PROJECT_NAME}} - Citation Guide
+= snifs — Citation Guide
 :toc:
+
+If you use this work, please cite it. The canonical machine-readable record is
+link:CITATION.cff[CITATION.cff] (DOI `10.5281/zenodo.19520245`).
 
 == BibTeX
 
 [source,bibtex]
 ----
-@software{{{PROJECT_NAME}}_{{CURRENT_YEAR}},
-  author = {{{AUTHOR_LAST}}, {{AUTHOR_FIRST}}},
-  title = {{{PROJECT_NAME}}},
-  year = {{{CURRENT_YEAR}}},
-  url = {https://github.com/hyperpolymath/{{PROJECT_NAME}}},
+@software{snifs_2026,
+  author  = {Jewell, Jonathan D. A.},
+  title   = {SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing},
+  year    = {2026},
+  url     = {https://github.com/hyperpolymath/snifs},
+  doi     = {10.5281/zenodo.19520245},
   license = {MPL-2.0}
 }
 ----
 
 == Harvard Style
 
-{{AUTHOR_LAST}}, {{AUTHOR_INITIALS}} ({{CURRENT_YEAR}}) _{{PROJECT_NAME}}_ [Computer software]. Available at: https://github.com/hyperpolymath/{{PROJECT_NAME}}
+Jewell, J.D.A. (2026) _SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing_ [Computer software]. Available at: https://github.com/hyperpolymath/snifs
 
 == OSCOLA
 
-{{AUTHOR}}, '{{PROJECT_NAME}}' ({{CURRENT_YEAR}}) <https://github.com/hyperpolymath/{{PROJECT_NAME}}>
+Jonathan D. A. Jewell, 'SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing' (2026) <https://github.com/hyperpolymath/snifs>
 
 == MLA
 
-{{AUTHOR_LAST}}, {{AUTHOR_FIRST}} "{{PROJECT_NAME}}." {{CURRENT_YEAR}}, github.com/hyperpolymath/{{PROJECT_NAME}}.
+Jewell, Jonathan D. A. "SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing." 2026, github.com/hyperpolymath/snifs.
 
 == APA 7
 
-{{AUTHOR_LAST}}, {{AUTHOR_INITIALS}} ({{CURRENT_YEAR}}). _{{PROJECT_NAME}}_ [Computer software]. GitHub. https://github.com/hyperpolymath/{{PROJECT_NAME}}
+Jewell, J. D. A. (2026). _SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing_ [Computer software]. GitHub. https://github.com/hyperpolymath/snifs
 
 == See Also
 
