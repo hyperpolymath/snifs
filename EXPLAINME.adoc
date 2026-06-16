@@ -78,3 +78,46 @@ ambition lives in groove/cleave, not here.
 | `verification/proofs/agda/SnifVerdict.agda` | Residue-clean (deniability) + non-forgery at the boundary.
 | `verification/tools/abi_conformance.py` | Model↔binary ABI drift gate (interface-level).
 |===
+
+== Dogfooded Across The Account
+
+[cols="1,2,2", options="header"]
+|===
+| Technology / Pattern | Used here | Also used in
+
+| Idris2 ABI / capability proofs
+| `verification/proofs/idris2/ABI/` models each guest's export signature; the conformance gate fails on model↔binary drift.
+| link:https://github.com/hyperpolymath/bag-of-actions[bag-of-actions] (capability `Protocol.idr`), link:https://github.com/hyperpolymath/proven[proven] (Idris2 proven-library)
+
+| Zig → wasm32-freestanding (`-OReleaseSafe`) guests
+| The SNIF kernel (`zig/src/safe_nif.zig`) compiles to a trapping wasm guest — UB becomes a trap, not a silent wrong answer.
+| link:https://github.com/hyperpolymath/bag-of-actions[bag-of-actions] (`estate.zig` FFI), link:https://github.com/hyperpolymath/gossamer[gossamer] (Zig ABI)
+
+| `--safe` machine-checked proofs
+| SEC-1 crash-isolation is mechanised in `--safe --without-K` Agda (`SnifIsolation.agda`).
+| link:https://github.com/hyperpolymath/echo-types[echo-types] (loss-with-residue, constructive Agda)
+|===
+
+== Known gaps
+
+[CAUTION]
+====
+*SEC-1 is proven modulo an explicit TCB.* The crash-isolation theorem holds
+relative to the `FaithfulRuntime` record hypothesis (the wasmtime/wasmex runtime
+behaves as modelled). This is an honest assumption boundary, not a postulate —
+see `PROOF-STATUS.md` for the trusted-base statement.
+====
+
+[CAUTION]
+====
+*ABI conformance gates 15 of ~20 Zig export sites.* `buffer_abi` is fully
+modelled (7/7); `safe_nif` coverage is partial. Tracked in `PROOF-NEEDS.md`
+(ABI-7).
+====
+
+[CAUTION]
+====
+*The Rust→wasm32 guest path is wired but dual-sourced.* `rust/crates/demo-guest`
+(workspace) and `rust-guest/` (standalone) are not yet reconciled; the
+exit/keep decision is recorded in the repo's Dustfile.
+====
