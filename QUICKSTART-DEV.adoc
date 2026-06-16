@@ -1,112 +1,107 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-// Template: QUICKSTART-DEV.adoc — clone → build → test → PR
-// Replace rsr-template-repo, {{BUILD_CMD}}, {{TEST_CMD}}, {{LANG_STACK}} with actuals
-= rsr-template-repo — Quick Start for Developers
+= snifs — Quick Start for Developers
 :toc:
 :toclevels: 2
 
 == Tech Stack
 
-{{LANG_STACK}}
+* **Host**: Elixir / BEAM (OTP 25+), `wasmex` → `wasmtime` sandbox.
+* **Guests**: Zig and Rust compiled to `wasm32-freestanding` (`-OReleaseSafe`).
+* **Proofs**: Idris2 (ABI + capability), Lean4 (API), Agda (`--safe --without-K`
+  crash-isolation + verdict).
+* **Tooling**: `just` task runner; Guix/Nix dev shells; `panic-attacker` security scan.
 
-== Set Up Development Environment
+== Set Up the Development Environment
 
 === Option A: Guix (preferred)
 
 [source,bash]
 ----
-guix shell
+just guix-shell
 ----
 
 === Option B: Nix (fallback)
 
 [source,bash]
 ----
-nix develop
+just nix-shell
 ----
 
 === Option C: Manual
 
 [source,bash]
 ----
-git clone https://github.com/hyperpolymath/rsr-template-repo.git
-cd rsr-template-repo
-just setup-dev
+git clone https://github.com/hyperpolymath/snifs.git
+cd snifs
+just deps          # install / check toolchain dependencies
 ----
 
-== Build
-
-[source,bash]
-----
-{{BUILD_CMD}}
-----
-
-== Test
+== Build & Test
 
 [source,bash]
 ----
-{{TEST_CMD}}
+just build-wasm           # compile the Zig/Rust guests to priv/*.wasm (ReleaseSafe)
+cd demo && mix deps.get && mix test    # 21/21 ExUnit crash-isolation suite
+----
+
+== Check the Proofs
+
+[source,bash]
+----
+just proof-check-all      # Idris2 ABI + Lean4 API + Agda SEC-1 + dangerous-pattern scan
+just abi-conformance      # model ↔ shipped-binary ABI drift gate (required check)
+just proof-status         # summary of proven / tested / trusted
 ----
 
 == Project Structure
 
 [source]
 ----
-rsr-template-repo/
-├── src/                  # Source code
-├── src/abi/              # Idris2 ABI definitions (if applicable)
-├── ffi/zig/              # Zig FFI bridge (if applicable)
-├── tests/                # Test suite
-├── docs/                 # Documentation
-├── .machine_readable/    # Checkpoint files (STATE, META, ECOSYSTEM)
-├── Justfile              # Task runner recipes
-├── guix.scm              # Guix environment
-├── flake.nix             # Nix environment (fallback)
-└── 0-AI-MANIFEST.a2ml    # AI agent entry point
+snifs/
+├── zig/src/safe_nif.zig       # the SNIF kernel — six trapped crash modes
+├── zig/                       # safe_nif / buffer_abi / burble_fft guests
+├── rust/ , rust-guest/        # Rust→wasm32 guests (dual-sourced; see Dustfile)
+├── demo/                      # Mix project: wasmex loader + ExUnit suite
+├── verification/proofs/       # Idris2 / Lean4 / Agda proof artifacts
+├── verification/tools/        # abi_conformance.py and friends
+├── benches/                   # benchmark harness
+├── docs/                      # paper, ADRs, proof/tech-debt ledgers
+├── .machine_readable/         # 6a2 checkpoint files + load-bearing contractiles
+├── Justfile                   # task runner recipes
+└── 0-AI-MANIFEST.a2ml         # AI agent entry point
 ----
 
 == Key Recipes
 
 [source,bash]
 ----
-just build          # Build the project
-just test           # Run tests
-just doctor         # Self-diagnostic
-just lint           # Lint and format
-just panic-scan     # Security scan via panic-attacker
-just tour           # Guided tour of the codebase
+just build-wasm       # Build the WASM guests
+just test             # Run the host test suite (alias for the demo suite)
+just doctor           # Self-diagnostic
+just lint             # Lint
+just fmt              # Format all source files
+just assail           # panic-attacker pre-commit security scan
+just tour             # Guided tour of the codebase
 ----
 
 == Before Submitting a PR
 
 [source,bash]
 ----
-just lint           # Format and lint
-just test           # All tests pass
-just panic-scan     # No new security issues
+just quality          # fmt-check + lint + test
+just proof-check-all  # all proofs still check
+just assail           # no new security findings
 ----
 
-== Contractile Invariants
+Commits must be **signed**. See `CONTRIBUTING.md` for the signing-key policy.
 
-Read `.machine_readable/MUST.contractile` before making changes.
-Key invariants that must never be violated:
+== LLM / AI Agent Development
 
-{{MUST_INVARIANTS}}
-
-== LLM/AI Agent Development
-
-If using an AI assistant, load the warmup context first:
-
-[source,bash]
-----
-just llm-context    # Outputs role-appropriate context
-----
-
-Or read `0-AI-MANIFEST.a2ml` and `.claude/CLAUDE.md` directly.
+Read `0-AI-MANIFEST.a2ml` and `.claude/CLAUDE.md` first, then `PROOF-STATUS.md`
+before making any claim about what is proven.
 
 == Get Help
 
 * **Architecture**: link:EXPLAINME.adoc[EXPLAINME.adoc]
-* **Wiki**: https://github.com/hyperpolymath/rsr-template-repo/wiki
 * **Report issue**: `just help-me`

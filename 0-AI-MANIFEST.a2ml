@@ -1,14 +1,26 @@
-# RSR Template AI Manifest (Read First)
+# SPDX-License-Identifier: MPL-2.0
+# Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
-This is the root AI manifest for the template repository.
+# snifs — Root AI Manifest (Read First)
 
-## Template Status
+This is the root AI manifest for **snifs** — *Safer Native Implemented Functions*
+for the BEAM via WebAssembly sandboxing. snifs keeps the NIF *interface* (call a
+native-implemented function, get a value) but sandboxes the *implementation*: the
+guest is compiled to `wasm32-freestanding` (Zig and Rust today) and run under
+`wasmtime` via `wasmex`, so a guest fault becomes a catchable `{:error, reason}`
+tuple and the calling BEAM process survives.
 
-This repository intentionally contains template placeholders before bootstrap.
-Examples: `hyperpolymath`, `snif`, `{{PROJECT_NAME}}`, `[YOUR-REPO-NAME]`.
+This repository is **bootstrapped** (not a template). It contains no
+`{{PLACEHOLDER}}` tokens; treat every path and command below as real.
 
-Do not invent project-specific values unless the operator runs template
-initialization (for example `just init`) or explicitly provides values.
+## What snifs is (and is not)
+
+- snifs realizes a residue-clean cleave **instance** at one boundary (BEAM host ↔
+  native guest). It is *an* instance of a cleave, not "the cleave". The graduated
+  integration / capability-negotiation ambition lives in the separate *cleave* and
+  *groove* layers, not here (see `EXPLAINME.adoc`).
+- Scope ceiling by design: SNIF stops at NIF-parity + crash-isolation. It does not
+  extend the NIF interface.
 
 ## Authority Split
 
@@ -41,21 +53,30 @@ initialization (for example `just init`) or explicitly provides values.
 1. Keep protocol text centralized; do not duplicate full protocol specs here.
 2. Keep local policy and hook behavior local to this repo.
 3. Write runtime session artifacts in working repos (typically `.session/`).
-4. Keep README/AUDIT/manifest claims synchronized with actual files.
-5. Mark stubs and placeholders explicitly.
+4. Keep README/EXPLAINME/AUDIT/manifest claims synchronized with actual files.
+5. Always compile Zig WASM guests with `-OReleaseSafe` (`ReleaseFast` turns faults
+   into silent wrong answers — the negative control).
+6. NEVER use raw NIFs (`erlang:load_nif`); the whole point of this repo is to not
+   need them.
 
 ## Key Local Files
 
+- `README.adoc` (orientation, scope, benchmarks)
+- `EXPLAINME.adoc` (claim-to-implementation map + honest caveats)
 - `AUDIT.adoc` (local audit gate summary)
-- `README.adoc` (template orientation)
-- `EXPLAINME.adoc` (claim-to-implementation map)
-- `session/README.md` (session-binding usage)
-- `.machine_readable/` (machine-readable repo policy/state files)
+- `PROOF-STATUS.md` / `PROOF-NEEDS.md` (what is proven, what is tested, what is owed)
+- `zig/src/safe_nif.zig` (the SNIF kernel — trapped failure modes)
+- `demo/` (Mix project: wasmex loader + ExUnit crash-isolation suite)
+- `verification/proofs/` (Idris2 / Lean4 / Agda proof artifacts)
+- `verification/tools/abi_conformance.py` (model↔binary ABI drift gate)
+- `session/README.adoc` (session-binding usage)
+- `.machine_readable/` (machine-readable repo policy/state + contractiles)
 
 ## Startup Checklist For Agents
 
-1. Read `0-AI-MANIFEST.a2ml`.
-2. Read `AUDIT.adoc`.
-3. Confirm whether placeholders have been initialized.
+1. Read `0-AI-MANIFEST.a2ml` (this file).
+2. Read `README.adoc`, then `EXPLAINME.adoc`, then `AUDIT.adoc`.
+3. Read `PROOF-STATUS.md` before making any claim about what is proven.
 4. Use canonical session commands through `session/dispatch.sh` or Just aliases.
-5. Avoid claiming files/paths exist unless verified in this repository.
+5. Do not claim files/paths/recipes exist unless verified in this repository
+   (`just --list` for recipes).

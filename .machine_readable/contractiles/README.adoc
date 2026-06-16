@@ -1,21 +1,46 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-= Contractiles Template Set
+= snifs Contractiles (Load-Bearing)
 :toc:
 :sectnums:
 
-This directory contains the generalized contractiles templates. Copy the `.machine_readable/contractiles/` directory into a new repo to establish a consistent operational, validation, trust, recovery, and intent framework.
-
-== Fill-In Instructions
-
-1. Update the Mustfile to reflect your real invariants (paths, schema versions, ports).
-2. Replace Trustfile.hs placeholders with your actual key paths and verification commands.
-3. Adjust Dustfile handlers to match your rollback and recovery tooling.
-4. Update Intentfile to mirror the roadmap you want the system to evolve toward.
+This directory holds the **load-bearing** contractiles for snifs — the operational,
+validation, trust, recovery, intent, and adjustment contracts that the `Mustfile`
+checks and that CI / the pre-commit hook enforce. These are the real instances, not
+templates; blank templates live under `docs/templates/contractiles/`.
 
 == Contents
 
-* `must/Mustfile` - required invariants and validations.
-* `trust/Trustfile.hs` - cryptographic verification steps.
-* `dust/Dustfile` - rollback and recovery semantics.
-* `lust/Intentfile` - future intent and roadmap direction.
+[cols="1,3", options="header"]
+|===
+| File | Role
+
+| `Mustfile.a2ml`
+| Required physical-state invariants and validations (hard requirements — CI and the
+  pre-commit hook fail if any check fails).
+
+| `Trustfile.a2ml`
+| Cryptographic verification steps (signing keys, commit-verification posture).
+
+| `Adjustfile.a2ml`
+| Moving-adjustment posture — the live floor that graduates toward `Mustfile`.
+
+| `Intentfile.a2ml`
+| Declared future intent and roadmap direction.
+
+| `bust/Bustfile.a2ml`
+| Design aetiology → causal help/error/removal scripts (not bandaids).
+
+| `dust/Dustfile.a2ml`
+| Exnovation, rollback, and recovery semantics.
+
+| `Justfile`
+| Contractile task runner (drives `must check`, `bust`, `dust`, etc.).
+|===
+
+== Notes
+
+* The canonical estate contractile layout is the per-verb subdir trident master in
+  `hyperpolymath/standards`; this directory tracks snifs's current realized set.
+* Changing a `Mustfile` check changes what CI enforces — treat edits here as
+  load-bearing, not cosmetic.
