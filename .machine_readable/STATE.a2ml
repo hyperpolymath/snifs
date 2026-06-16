@@ -3,7 +3,7 @@
 
 (state
   (metadata
-    (project "snif")
+    (project "snifs")
     (version "0.1.0")
     (date "2026-04-11")
     (status "paper-ready"))
@@ -29,6 +29,6 @@
 
   (critical-next-actions
     (action "pdflatex docs/whitepapers/academic/snif.tex")
-    (action "gh repo create hyperpolymath/snif --public")
+    (action "gh repo create hyperpolymath/snifs --public")
     (action "git push origin main")
     (action "zenodo deposit with DOI")))

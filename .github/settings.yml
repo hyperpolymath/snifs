@@ -12,9 +12,9 @@
 # ─── Repository Settings ───────────────────────────────────────────────────────
 
 repository:
-  name: "snif"
+  name: "snifs"
   description: "{{DESCRIPTION}}"
-  homepage: "https://github.com/hyperpolymath/snif"
+  homepage: "https://github.com/hyperpolymath/snifs"
   private: false
   has_issues: true
   has_projects: true

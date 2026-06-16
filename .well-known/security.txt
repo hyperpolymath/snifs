@@ -6,6 +6,6 @@ Contact: mailto:{{SECURITY_EMAIL}}
 Expires: {{CURRENT_YEAR}}-12-31T23:59:59.000Z
 Encryption: {{PGP_KEY_URL}}
 Preferred-Languages: en
-Canonical: https://github.com/hyperpolymath/snif/.well-known/security.txt
-Policy: https://github.com/hyperpolymath/snif/blob/main/SECURITY.md
+Canonical: https://github.com/hyperpolymath/snifs/.well-known/security.txt
+Policy: https://github.com/hyperpolymath/snifs/blob/main/SECURITY.md
 Hiring: https://{{WEBSITE}}/careers
