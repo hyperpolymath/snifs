@@ -17,7 +17,6 @@ This repository contains:
 (2) a working BEAM + WASM implementation,
 (3) integration tests and benchmarking,
 (4) formal verification artifacts.
-image:https://img.shields.io/badge/license-PMPL--1.0--or--later-blue[License]
 
 == Overview
 
