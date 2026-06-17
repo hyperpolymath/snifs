@@ -2,10 +2,7 @@
 # Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# RSR Standard Justfile Template
-# https://just.systems/man/en/
-#
-# Copy this file to new projects and customize the placeholder values.
+# snifs — task runner (https://just.systems/man/en/)
 #
 # Run `just` to see all available recipes
 # Run `just cookbook` to generate docs/just-cookbook.adoc
@@ -19,10 +16,10 @@ set positional-arguments := true
 # Re-generate with: contractile gen-just
 import? "contractile.just"
 
-# Project metadata — customize these
-project := "rsr-template-repo"
+# Project metadata
+project := "snifs"
 OWNER := "hyperpolymath"
-REPO := "rsr-template-repo"
+REPO := "snifs"
 version := "0.1.0"
 tier := "infrastructure"  # 1 | 2 | infrastructure
 
@@ -333,9 +330,10 @@ verify-template:
         FOUND=1
     fi
 
-    # Check for template defaults still present
-    if grep -q 'rsr-template-repo' Justfile 2>/dev/null; then
-        echo "⚠ Justfile still references 'rsr-template-repo' — update project name"
+    # Check the project/REPO assignments have been de-branded from the template default.
+    # Scoped to the variable assignment so the check never trips on its own grep pattern.
+    if grep -qE '^(project|REPO)[[:space:]]*:=[[:space:]]*"rsr-template-repo"' Justfile 2>/dev/null; then
+        echo "⚠ Justfile project/REPO still set to 'rsr-template-repo' — update project name"
         FOUND=1
     fi
 
@@ -690,18 +688,18 @@ readiness:
     #   cargo test --test readiness -- --nocapture
     @echo "Readiness tests complete!"
 
-# Print the current CRG grade (reads from READINESS.md '**Current Grade:** X' line)
+# Print the current CRG grade (reads from READINESS.adoc '*Current Grade:* X' line)
 crg-grade:
-    @grade=$$(grep -oP '(?<=\*\*Current Grade:\*\* )[A-FX]' READINESS.md 2>/dev/null | head -1); \
-    [ -z "$$grade" ] && grade="X"; \
-    echo "$$grade"
+    @grade=$(grep -oP '(?<=\*Current Grade:\* )[A-FX]' READINESS.adoc 2>/dev/null | head -1); \
+    [ -z "$grade" ] && grade="X"; \
+    echo "$grade"
 
 # Print a shields.io CRG badge for embedding in README files
-# Looks for '**Current Grade:** X' in READINESS.md; falls back to X
+# Looks for '*Current Grade:* X' in READINESS.adoc; falls back to X
 crg-badge:
-    @grade=$$(grep -oP '(?<=\*\*Current Grade:\*\* )[A-FX]' READINESS.md 2>/dev/null | head -1); \
-    [ -z "$$grade" ] && grade="X"; \
-    case "$$grade" in \
+    @grade=$(grep -oP '(?<=\*Current Grade:\* )[A-FX]' READINESS.adoc 2>/dev/null | head -1); \
+    [ -z "$grade" ] && grade="X"; \
+    case "$grade" in \
       A) color="brightgreen" ;; \
       B) color="green" ;; \
       C) color="yellow" ;; \
@@ -710,7 +708,7 @@ crg-badge:
       F) color="critical" ;; \
       *) color="lightgrey" ;; \
     esac; \
-    echo "[![CRG $$grade](https://img.shields.io/badge/CRG-$$grade-$$color?style=flat-square)](https://github.com/hyperpolymath/standards/tree/main/component-readiness-grades)"
+    echo "[![CRG $grade](https://img.shields.io/badge/CRG-$grade-$color?style=flat-square)](https://github.com/hyperpolymath/standards/tree/main/component-readiness-grades)"
 
 # Run the full merge-requirement test suite (ALL categories)
 # Per STANDING rule: P2P + E2E + aspect + execution + lifecycle + bench
@@ -867,7 +865,7 @@ container-init:
 
     if [ ! -d "container" ]; then
         echo "Error: container/ directory not found."
-        echo "This repo may not have been created from rsr-template-repo."
+        echo "Expected a container/ directory with Containerfile + compose templates."
         exit 1
     fi
 
@@ -1303,7 +1301,7 @@ assail:
 
 # Self-diagnostic — checks dependencies, permissions, paths
 doctor:
-    @echo "Running diagnostics for rsr-template-repo..."
+    @echo "Running diagnostics for snifs..."
     @echo "Checking required tools..."
     @command -v just >/dev/null 2>&1 && echo "  [OK] just" || echo "  [FAIL] just not found"
     @command -v git >/dev/null 2>&1 && echo "  [OK] git" || echo "  [FAIL] git not found"
@@ -1313,7 +1311,7 @@ doctor:
 
 # Guided tour of key features
 tour:
-    @echo "=== rsr-template-repo Tour ==="
+    @echo "=== snifs Tour ==="
     @echo ""
     @echo "1. Project structure:"
     @ls -la
@@ -1328,12 +1326,12 @@ tour:
 
 # Open feedback channel with diagnostic context
 help-me:
-    @echo "=== rsr-template-repo Help ==="
+    @echo "=== snifs Help ==="
     @echo "Platform: $(uname -s) $(uname -m)"
     @echo "Shell: $SHELL"
     @echo ""
     @echo "To report an issue:"
-    @echo "  https://github.com/hyperpolymath/rsr-template-repo/issues/new"
+    @echo "  https://github.com/hyperpolymath/snifs/issues/new"
     @echo ""
     @echo "Include the output of 'just doctor' in your report."
 
