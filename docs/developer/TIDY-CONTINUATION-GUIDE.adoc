@@ -1,0 +1,141 @@
+// SPDX-License-Identifier: MPL-2.0
+// Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= snifs De-template Tidy — Continuation Guide
+:toc: preamble
+:icons: font
+
+Guide for any agent or maintainer continuing the snifs repository de-templating
+effort. The durable parts (rules, method, gotchas) below do not go stale; the
+live PR state in <<state>> is a dated snapshot — always re-check `gh pr list` and
+`git log --oneline -15` first. The full, evolving plan lives in
+`~/developer/dev-notes/2026-06-16-snifs-phase2-detemplate-plan.adoc`.
+
+== What snifs is (don't misframe it)
+
+SNIF = *Safer NIF*. Native code (Zig today, Rust wired) is compiled to
+`wasm32-freestanding` with `-OReleaseSafe` and run under `wasmtime` via `wasmex`,
+so a guest trap becomes a catchable `{:error, reason}` and the BEAM survives. It is
+a *research + reference repository* (architecture paper + working BEAM/WASM
+implementation + formal proofs), *not* an installable app. It is one realized point
+on the `cleave` dial — not "the cleave"; keep cleave/groove ambitions out.
+
+Ground-truth numbers (verify before repeating any claim): *21/21* in-BEAM ExUnit;
+*10* machine-checked proofs (6 Idris2 ABI + 1 Idris2 core + 1 Lean4 + 2 Agda); ABI
+conformance gates *15 of 20* Zig sites; `zig/src/safe_nif.zig` has *8 exports of
+which 5 are `crash_*`*. "Six crash modes", "11/11", or "7 proofs" = stale.
+
+[[state]]
+== Live state — snapshot 2026-06-17 (re-verify with `gh pr list`)
+
+[cols="1,2,3", options="header"]
+|===
+| PR | Branch | Scope
+| #42 | `chore/repo-tidy-2026-06-16` | A–D tidy + safe-subset identity (11 commits)
+| #43 | `fix/manifest-parent-pointers` | WP-1: 5 manifest parent pointers
+| #44 | `chore/identity-snif-to-snifs` | WP-2: snif/rsr-template-repo → snifs (20 files)
+|===
+
+All disjoint, signed, awaiting owner merge (admin-merge is owner-only). WP-1 and
+WP-2 done. WP-3 (CLADE clade-prefix) *dropped by owner decision* — leave the
+`[clade]` block in `.machine_readable/CLADE.a2ml` as-is.
+
+== Hard rules — non-negotiable
+
+. *Licence / SPDX = owner-only, flag-only.* Never auto-edit a LICENSE file, an
+  `SPDX-License-Identifier`, or relicense — even if policy-correct. PMPL is forbidden
+  outside `palimpsest-license` / `palimpsest-plasma` / `consent-aware-http`.
+  `AFFIRMATION.adoc`'s dual `MPL-2.0 OR CC-BY-SA-4.0` is correct — leave it.
+. *Sign every commit:* `git commit -S` with `id_ed25519_signing` (NEVER the auth-only
+  `id_ed25519`). Verify with `git verify-commit HEAD`. Never `--no-verify`.
+. *Keep the pre-commit hook strict.* It checks staged A/M files matching
+  `\.(zig|ex|idr|eph|py|js|ts|rs|c|h|adoc|md)$` for *both* `SPDX-License-Identifier:
+  MPL-2.0` *and* the literal `Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>`.
+  `.a2ml`/`.toml`/`.yml`/`.txt`/deletions/renames are exempt. It also bars raw NIFs
+  and C files.
+. *Stop before anything outward-facing.* Build and commit locally freely; STOP before
+  push / PR / merge and let the owner decide.
+. *Scope discipline.* Do exactly the approved work-package. When you find more drift
+  (you will), flag it — don't sweep it.
+. *Look before you delete or overwrite.* This bit twice already (a "paper stub" was a
+  full superseded paper; a "placeholder MAINTAINERS" was filled). If a target
+  contradicts how it was described, re-surface to the owner. Deletions are owner-gated,
+  per file.
+
+== Remaining work
+
+*WP-4 — load-bearing config (its own PR; re-verify after).*
+
+* Root `Justfile`: `project := "rsr-template-repo"` → `snifs` (*16 `{{project}}`
+  interpolation sites* — `just --list` + smoke recipes after); retarget help/tour/issues
+  URLs; fix the self-check (~line 337) + template-derivation message (~870). `REPO :=`
+  is defined but unused.
+* Contractile `Mustfile`/`Trustfile`/`Intentfile`/`Adjustfile` + generated `Justfile`:
+  de-brand prose, and fix the two self-contradicting Mustfile checks —
+  `no-placeholder-values` over-matches just-syntax `{{recipe}}` (scope to `{{[A-Z_]+}}`),
+  and `template-readonly` greps a `RSR_TEMPLATE_DO_NOT_EDIT` marker that no longer exists
+  (remove/repurpose). *Fix the check, never the repo, to satisfy a stale gate.*
+
+*WP-5 — deletions + format (its own PR; per-file owner approval).*
+
+* `docs/QUICKSTART.adoc` (dup of the root `QUICKSTART-*.adoc` trio) → delete.
+* `.machine_readable/ai/PLACEHOLDERS.adoc` (the init recipe says `rm` it) → delete.
+* `docs/RSR_OUTLINE.adoc` (pure template doc) → delete or rewrite as a snifs outline.
+* `READINESS.md` → `READINESS.adoc` (convert + fill `{{DATE}}` + snif→snifs).
+
+*Open decisions (get from owner before executing):* D-a (keep/remove bootstrap
+tooling: `scripts/validate-template.sh`, `setup.sh`, self-validating `k9` examples),
+D-c (Mustfile-check fix approach), D-d (confirm WP-5 deletions + RSR_OUTLINE
+delete-vs-rewrite), D-e (`docs/decisions/0000-template.adoc` keep-vs-neutralize),
+D-f (`docs/governance/` subtree numbering: normalize vs promote to root pillar).
+
+*Already deferred / flagged (don't silently absorb):* `docs/whitepapers/academic/snif.tex`
+(two `\url{}` → `snif`; published DOI'd paper — owner action: fix + `just paper` rebuild +
+re-deposit); the non-identity `{{PLACEHOLDER}}`s in `container/`/`security.txt`/`dep5`
+(separate fill task); `llm-warmup-*.md` thin boilerplate (phantom `just setup`);
+`.machine_readable/STATE.a2ml` stale overall.
+
+== Method that has worked
+
+. Cut every branch from *fresh `origin/main`* (`git fetch && git checkout -b <name>
+  origin/main`) — local clones carry divergence; basing on a stale tip silently reverts
+  other work.
+. One work-package = one small, disjoint PR.
+. Read-only map → owner-approve → execute → adversarially verify → STOP before push.
+. Verify deterministically before each commit: re-run every Mustfile `run:` check;
+  simulate the hook; phantom-recipe scan (`just <x>` in `just --list`); dangling-reference
+  scan; manifest parent-pointer resolution; `git verify-commit` each commit; confirm
+  `AFFIRMATION.adoc` SPDX unchanged.
+. For substantive review, spin a short adversarial workflow (content-drift /
+  cross-reference / completeness) — it caught a botched README header a self-check missed.
+
+== Gotchas that will bite
+
+* *`snif` vs `snifs`:* repo name/URLs are `snifs`, but the crate prefix `snif-` and the
+  paper file `snif.pdf` are intentional — leave them. A blind sweep corrupts both;
+  `hyperpolymath/snif`→`snifs` turns an existing `…/snifs` into `…/snifss` (substring
+  trap) — collision-check first.
+* *Recipes: `just --list` is the only truth.* Real: `build-wasm`, `assail`,
+  `container-build`/`-run`, `proof-check-all`, `abi-conformance`, `tour`, `doctor`,
+  `paper`. Phantom (never reference): `setup`, `setup-dev`, `heal`, `uninstall`,
+  `panic-scan`, `stapeln-export`/`-run`, `llm-context`.
+* *DOC-FORMAT:* AsciiDoc primary; `.md` only for GitHub-required files (SECURITY,
+  CONTRIBUTING, CODE_OF_CONDUCT, CHANGELOG, copilot-instructions) and the standards root
+  pointers (TOPOLOGY, PROOF-NEEDS, PROOF-STATUS, TEST-NEEDS, llm-warmup-*).
+* *AI-manifest convention:* a dir at depth N → `0.N-AI-MANIFEST.a2ml`, `level: N`,
+  `parent: ../0.{N-1}-AI-MANIFEST.a2ml` (root children use `../0-AI-MANIFEST.a2ml`).
+  `docs/governance/` violates this (D-f).
+* *`Containerfile` must stay at repo root* — `dogfood-gate.yml` checks `[ -f
+  "Containerfile" ]` there.
+* *`.github/settings.yml`* is the probot/settings sync source — a wrong `name:` can rename
+  the repo.
+* *`dogfood-gate.yml`'s `rsr-template-repo` refs are legitimate* (point users to the real
+  template) — leave them.
+
+== Canonical facts
+
+* Owner literal: `Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>`.
+* Citation: _SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly
+  Sandboxing_, Jewell, Jonathan D. A., 2026, DOI `10.5281/zenodo.19520245`, MPL-2.0.
+  Canonical record = root `CITATION.cff`.
+* One-line purpose: _Safer NIFs: crash-isolated native interfaces for the BEAM via
+  WebAssembly sandboxing._
