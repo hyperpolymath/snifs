@@ -1,292 +1,104 @@
 // SPDX-License-Identifier: MPL-2.0
-// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-= RSR Template Repository
-
-image:[Palimpsest-MPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"] image:[Palimpsest,link="https://github.com/hyperpolymath/palimpsest-license"]
-:toc:
+// Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= snifs — Repository Outline
+:toc: left
+:toclevels: 3
 :sectnums:
 
-// Badges
-image:https://img.shields.io/badge/RSR-Infrastructure-cd7f32[RSR Infrastructure]
-image:https://img.shields.io/badge/Phase-Maintenance-brightgreen[Phase]
-image:https://img.shields.io/badge/Guix-Primary-purple?logo=gnu[Guix]
+A map of how this repository is laid out and where each concern lives.
+For *what* snifs is and *why*, read `README.adoc` then `EXPLAINME.adoc`.
+For the honest, dated state-of-the-proofs snapshot, read `AFFIRMATION.adoc`.
 
-== Overview
+== What snifs is
 
-**The canonical template for RSR (Rhodium Standard Repository) projects.**
+*SNIF = Safer NIF.* Native code (Zig today; Rust wired) is compiled to
+`wasm32-freestanding` with `-OReleaseSafe` and run under `wasmtime` via
+`wasmex`. A guest trap becomes a catchable `{:error, reason}` and the BEAM
+survives. snifs is a *research + reference* repository — the architecture
+paper, a working BEAM/WASM implementation, and machine-checked proofs — not
+an installable end-user application.
 
-This repository provides the standardized structure, configuration, and tooling for all RSR-compliant repos. Use it to:
+It is one realized point on the `cleave` dial (the safe middle detent), not
+"the cleave".
 
-* Bootstrap new projects with RSR compliance
-* Reference the standard directory structure
-* Copy configuration templates (Justfile, STATE.a2ml, etc.)
+== Dual track
 
-== Quick Start
-
-[source,bash]
-----
-# Clone the template
-git clone https://github.com/hyperpolymath/RSR-template-repo my-project
-cd my-project
-
-# Remove template git history
-rm -rf .git
-git init
-
-# Interactive bootstrap — replaces all placeholders
-just init
-
-# Enter development environment
-guix shell -D -f guix.scm
-
-# Validate compliance
-just validate-rsr
-----
-
-== What's Included
-
-[cols="1,3"]
+[cols="1,4", options="header"]
 |===
-|File/Directory |Purpose
+| Track | What lives there
 
-|`.editorconfig`
-|Editor configuration (indent, charset)
+| Implementation
+| The Zig guests (`zig/`), the Rust guest (`rust/`, `rust-guest/`), the
+  Elixir host + demo (`demo/`), the built artifacts (`priv/*.wasm`), and the
+  evaluation harness (`benches/`).
 
-|`.gitignore`
-|Standard ignore patterns
-
-|`.gitattributes`
-|Line endings, diff drivers, binary detection
-
-|`.guix-channel`
-|Guix channel definition
-
-|`.well-known/`
-|RFC-compliant metadata (security.txt, ai.txt, humans.txt)
-
-|`.machine_readable/`
-|All machine-readable content: state files (6 a2ml), `bot_directives/`, `contractiles/`
-
-|`docs/`
-|Documentation directory
-
-|`guix.scm`
-|Guix package definition
-
-|`Justfile`
-|Task runner with 40+ recipes
-
-|`Containerfile`
-|Container build (Wolfi base, Podman)
-
-|`LICENSE`
-|MPL-2.0 (Palimpsest MPL)
-
-|`EXHIBIT-A-ETHICAL-USE.txt`
-|Ethical use guidelines (LICENSE Exhibit A)
-
-|`EXHIBIT-B-QUANTUM-SAFE.txt`
-|Quantum-safe provenance spec (LICENSE Exhibit B)
-
-|`README.adoc`
-|Project overview
-
-|`TOPOLOGY.md`
-|Architecture diagram and completion dashboard
-
-|`PLACEHOLDERS.md`
-|Template variable reference and replacement guide
-
-|`0-AI-MANIFEST.a2ml`
-|Universal AI agent entry point
-
-|`AI.a2ml`
-|Claude-specific instructions
-
-|`src/abi/`
-|Idris2 ABI definitions (Types, Layout, Foreign)
-
-|`ffi/zig/`
-|Zig FFI implementation
-
-|`generated/abi/`
-|Auto-generated C headers from Idris2 ABI
+| Assurance
+| The formal proofs and the conformance/behaviour gates (`verification/`),
+  plus the interface definitions that the proofs and the guests must agree on
+  (`src/interface/`).
 |===
 
-== Justfile Features
-
-The template Justfile provides:
-
-* **Combinatoric matrix recipes** for build, test, container, CI
-* **Cookbook generation**: `just cookbook` -> `docs/just-cookbook.adoc`
-* **Man page generation**: `just man` -> `docs/man/project.1`
-* **RSR validation**: `just validate-rsr`
-* **STATE.a2ml management**: `just state-touch`, `just state-phase`
-* **Container support**: `just container-build`, `just container-push`
-* **CI matrix**: `just ci-matrix [stage] [depth]`
-
-=== Key Recipes
-
-[source,bash]
-----
-just                # Show all recipes
-just help <recipe>  # Detailed help
-just info           # Project info
-just combinations   # Show matrix options
-
-just build          # Build (debug)
-just test           # Run tests
-just quality        # Format + lint + test
-just ci             # Full CI pipeline
-
-just validate       # RSR + STATE validation
-just docs           # Generate all docs
-just cookbook        # Generate Justfile docs
-
-just guix-shell     # Guix dev environment
-just container-build # Build container
-----
-
-== Directory Structure
+== Top-level layout
 
 [source]
 ----
-project/
-├── .editorconfig              # Editor settings
-├── .gitignore                 # Git ignore
-├── .gitattributes             # Line endings, diff drivers
-├── .guix-channel              # Guix channel
-├── .well-known/               # RFC metadata
-│   ├── ai.txt
-│   ├── humans.txt
-│   └── security.txt
-├── .machine_readable/         # ALL machine-readable content
-│   ├── STATE.a2ml             # Project state, progress, blockers
-│   ├── META.a2ml              # Architecture decisions, governance
-│   ├── ECOSYSTEM.a2ml         # Ecosystem position, relationships
-│   ├── AGENTIC.a2ml           # AI agent interaction patterns
-│   ├── NEUROSYM.a2ml          # Neurosymbolic integration config
-│   ├── PLAYBOOK.a2ml          # Operational runbook
-│   ├── bot_directives/        # Per-bot rules and constraints
-│   └── contractiles/          # Policy enforcement contracts
-│       ├── k9/                # Security levels (Kennel/Yard/Hunt)
-│       ├── dust/Dustfile      # Recovery and rollback
-│       ├── lust/Intentfile    # Future intent declarations
-│       ├── must/Mustfile      # Invariant checks
-│       └── trust/Trustfile.hs # Cryptographic verification
-├── docs/                      # Documentation
-│   ├── CITATIONS.adoc
-│   ├── TOPOLOGY-GUIDE.adoc
-│   ├── generated/
-│   └── man/
-├── src/abi/                   # Idris2 ABI definitions
-│   ├── Types.idr
-│   ├── Layout.idr
-│   └── Foreign.idr
-├── ffi/zig/                   # Zig FFI implementation
-│   ├── build.zig
-│   ├── src/main.zig
-│   └── test/integration_test.zig
-├── generated/abi/             # Auto-generated C headers
-├── examples/                  # Example code
-├── guix.scm                   # Guix package
-├── Justfile                   # Task runner
-├── Containerfile              # Container build
-├── LICENSE                    # MPL-2.0
-├── EXHIBIT-A-ETHICAL-USE.txt  # Ethical use guidelines
-├── EXHIBIT-B-QUANTUM-SAFE.txt # Quantum-safe provenance
-├── README.adoc                # Overview
-├── TOPOLOGY.md                # Architecture + completion
-├── PLACEHOLDERS.md            # Template variable guide
-├── 0-AI-MANIFEST.a2ml         # Universal AI entry point
-└── AI.a2ml                    # Claude-specific instructions
+snifs/
+├── zig/                  Zig guests — src/{safe_nif,buffer_abi}.zig, build.zig
+├── rust/ rust-guest/     Rust guest path (wired)
+├── demo/                 Elixir host + ExUnit tests (wasmex consumer)
+├── benches/              SNIF evaluation harness (snif_eval.sh, assert_safer.py)
+├── priv/                 Built *.wasm artifacts (gitignored build output)
+├── src/                  Interface, core, contracts, aspects, bridges, errors
+│   └── interface/        Idris2 ABI (Abi/) + Zig FFI bridge
+├── verification/         Proofs, conformance tools, fuzzing, safety case
+│   ├── proofs/           idris2/ lean4/ agda/ (+ coq/ tlaplus/ scaffold)
+│   └── tools/            abi_conformance.py (interface-drift gate)
+├── container/            Containerfile + compose (Podman / Wolfi)
+├── docs/                 Documentation hub (see docs/0.1-AI-MANIFEST.a2ml)
+│   └── whitepapers/academic/snif.tex   The published, DOI'd paper
+├── .machine_readable/    6a2 state, contractiles, bot_directives, configs
+├── Justfile              Task runner (just --list is the source of truth)
+├── Containerfile         Container build (checked at repo root by CI)
+├── CITATION.cff          Canonical citation record
+└── README.adoc EXPLAINME.adoc AFFIRMATION.adoc AUDIT.adoc ROADMAP.adoc
 ----
 
-== RSR Compliance
+== Key recipes
 
-=== Language Tiers
-
-* **Tier 1** (Gold): Rust, Elixir, Zig, Ada, Haskell, ReScript, Gleam
-* **Tier 2** (Silver): Nickel, Guile Scheme, Nix, Idris2, OCaml
-* **Infrastructure**: Guix channels, derivations, Julia batch scripts
-
-=== Required Files
-
-* `.editorconfig`
-* `.gitignore`
-* `Justfile`
-* `README.adoc`
-* `LICENSE` (MPL-2.0)
-* `.machine_readable/STATE.a2ml`
-* `.well-known/security.txt`
-* `.well-known/ai.txt`
-* `.well-known/humans.txt`
-* `guix.scm` OR `flake.nix`
-
-=== Prohibited
-
-* Python outside `salt/` directory
-* TypeScript/JavaScript (use ReScript)
-* CUE (use Guile/Nickel)
-* `Dockerfile` (use `Containerfile`)
-* npm, Bun, pnpm, yarn (use Deno)
-* Go (use Rust)
-
-== STATE.a2ml
-
-The STATE.a2ml file tracks project state:
-
-[source]
-----
-# STATE — Project State Checkpoint
-# Format: a2ml (AI-readable markup)
-
-project: v-graphql
-version: 0.1.0
-last-updated: 2026-02-14
-status: active
-
-phase: implementation
-maturity: beta
-
-ecosystem:
-  part-of: RSR Framework
-  depends-on: []
-
-milestones:
-  - name: Initial setup
-    completion: 100
-  - name: Core implementation
-    completion: 0
-----
-
-== Badge Schema
-
-Generate badges from STATE.a2ml:
+`just --list` is the only authoritative recipe list. The load-bearing ones:
 
 [source,bash]
 ----
-just badges standard
+just build-wasm        # Compile the Zig guests to wasm32-freestanding
+just test-demo         # Build wasm, then run the Elixir ExUnit suite
+just eval              # SNIF evaluation + the "is it actually Safer?" assertions
+just proof-check-all   # Idris2 + Lean4 + the Agda safety bridge + danger scan
+just abi-conformance   # Gate the built .wasm exports against the Idris2 ABI model
+just paper             # Rebuild the PDF paper (docs/whitepapers/academic)
+just assail            # panic-attacker pre-commit security scan
 ----
 
-See `docs/BADGE_SCHEMA.adoc` for the full badge taxonomy.
+== Verification
 
-== Ecosystem Integration
+The proof inventory and its honest gaps live in `PROOF-STATUS.md` /
+`PROOF-NEEDS.md`; the test matrix in `TEST-NEEDS.md`. `abi-conformance` is a
+required check on `main` — the built `.wasm` exports must match the
+formally-verified Idris2 ABI model, so the proof cannot silently diverge from
+the shipped artifact.
 
-This template is part of:
+== RSR compliance
 
-* **STATE.a2ml Ecosystem**: Conversation checkpoints
-* **RSR Framework**: Repository standards
-* **Consent-Aware-HTTP**: .well-known compliance
-* **Hypatia**: Neurosymbolic security scanning
-* **gitbot-fleet**: Bot orchestration
+snifs follows the Rhodium Standard Repository layout (machine-readable state
+under `.machine_readable/`, `.well-known/` metadata, AI manifests per
+directory, contractile contracts). The canonical standard lives in
+https://github.com/hyperpolymath/standards[hyperpolymath/standards]; this
+file is the repo-local structural map, not the standard itself.
 
-== License
+== See also
 
-SPDX-License-Identifier: MPL-2.0
-
-== Links
-
-* https://github.com/hyperpolymath/elegant-STATE[elegant-STATE] - STATE tooling
-* https://github.com/hyperpolymath/conative-gating[conative-gating] - Policy enforcement
-* https://rhodium.sh[Rhodium Standard] - RSR documentation
+* `README.adoc` — overview and entry point
+* `EXPLAINME.adoc` — architecture and design rationale
+* `AFFIRMATION.adoc` — dated, signed, ground-truthed state snapshot
+* `docs/whitepapers/academic/snif.tex` — the published paper
+* `CITATION.cff` — how to cite snifs

@@ -13,7 +13,7 @@ description: |
   subdirectories.
 
 canonical_locations:
-  quickstart: "QUICKSTART.adoc"
+  quickstart: "../QUICKSTART-USER.adoc"
   state_visualizer: "STATE-VISUALIZER.adoc"
   governance: "governance/"
   architecture: "architecture/"
