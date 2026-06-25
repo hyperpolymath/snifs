@@ -2,8 +2,8 @@
 ---
 ### [META]
 id: "governance-axis-audit"
-level: 2
-parent: "../0.1-AI-MANIFEST.a2ml"
+level: 3
+parent: "../0.2-AI-MANIFEST.a2ml"
 
 ---
 ### [AI_MANIFEST]

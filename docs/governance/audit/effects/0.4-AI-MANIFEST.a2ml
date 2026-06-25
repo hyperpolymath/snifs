@@ -2,8 +2,8 @@
 ---
 ### [META]
 id: "governance-unit-effects"
-level: 3
-parent: "../0.2-AI-MANIFEST.a2ml"
+level: 4
+parent: "../0.3-AI-MANIFEST.a2ml"
 
 ---
 ### [AI_MANIFEST]
