@@ -1,0 +1,95 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= ADR 0006 — SNIF host runtime: pinned, patched, no-WASI wasmtime
+
+Date: 2026-06-25
+
+== Status
+
+Accepted.
+
+== Context
+
+A SNIF's whole value proposition is *sandbox integrity*: a guest fault must be
+trapped, never an escape into the BEAM's address space (ADR 0005). That guarantee
+is only as strong as the host wasmtime the sandbox runs in.
+
+Two **critical** wasmtime advisories break exactly that guarantee:
+
+* **GHSA-xx5w-cvp6-jv83** — Winch compiler backend on aarch64: a sandbox-escaping
+  memory access. Patched in `42.0.2` (for the `>= 37.0.0, < 42.0.2` line).
+* **GHSA-jhxm-h53p-jm7w** — miscompiled guest heap access on aarch64 Cranelift:
+  sandbox escape. Patched in `42.0.2`.
+
+Both are *sandbox escapes* — the one failure mode a SNIF exists to prevent — on
+aarch64 (Apple Silicon, ARM servers/CI).
+
+The host wasmtime is supplied transitively by `wasmex`. The current pin
+(`{:wasmex, "~> 0.14"}`) resolves to wasmex `0.14.0`, whose bundled wasmtime is in
+the **vulnerable** range, and which ships as a **precompiled** NIF
+(`rustler_precompiled`) — so the vulnerable runtime is baked into a downloaded
+binary, not even visible at the demo's build. Critically, **upstream wasmex has
+no release with a patched wasmtime** (latest `0.14.0` bundles wasmtime `39.0.1`),
+so "bump wasmex" is not a fix. wasmex also pulls in `wasmtime-wasi` /
+`wasi-common`, which SNIF guests never use — they are `wasm32-freestanding`, no
+WASI (ADR 0005) — so that surface is pure, unused attack surface.
+
+== Decision
+
+SNIF owns its host runtime version and configuration rather than inheriting
+whatever wasmex happens to bundle. The SNIF host runtime is:
+
+. **Patched wasmtime — pinned by SNIF, ≥ `42.0.2`** (current pin: the latest
+  stable patched line, `43.0.1`+). Achieved by building wasmex **from source**
+  (`force_build: true`) against a SNIF-maintained wasmex pin
+  (`hyperpolymath/wasmex`, branch `snif-wasmtime-patched`) whose
+  `native/wasmex/Cargo.toml` bumps `wasmtime`/`wasmtime-wasi`/`wasmtime-wasi-http`
+  to the patched line and is kept current by Dependabot + the estate dep-security
+  sweep. No precompiled NIFs for the host.
+. **Cranelift only — Winch disabled.** Winch is not used; removing it closes
+  GHSA-xx5w-cvp6-jv83 by construction and shrinks the codegen surface.
+. **No WASI.** `wasmtime-wasi` and `wasi-common` are dropped from the host build
+  (default features off; only the `cranelift` feature on). Guests are
+  freestanding (ADR 0005); WASI is dead weight and attack surface.
+. **Fuel-metered, store-capped** as today (ADR 0004) — unchanged; this ADR is
+  about *which* wasmtime and *how configured*, not the liveness guards.
+
+The pinned-and-patched property is a **gate**: CI fails if the resolved host
+wasmtime is in any advisory's vulnerable range (a `cargo audit` / advisory check
+over the built `Cargo.lock`).
+
+== Consequences
+
+=== Positive
+- The two critical sandbox-escape CVEs are removed; the SNIF integrity claim holds
+  on aarch64 as well as x86_64.
+- SNIF's sandbox integrity no longer depends on upstream wasmex's release cadence
+  or its choice of wasmtime version — SNIF pins and patches it directly.
+- Smaller host: no Winch, no WASI → less codegen and less unused surface.
+
+=== Negative / Neutral
+- The host NIF must be **built from source** (no precompiled fast path); CI and
+  contributor setup need a Rust toolchain (already required for the guest).
+- SNIF carries a thin wasmex fork pin (`hyperpolymath/wasmex@snif-wasmtime-patched`)
+  to bump wasmtime ahead of upstream. It tracks upstream wasmex otherwise.
+- Until the fork pin lands + CI verifies the build, the demo's `mix.exs` still
+  references upstream wasmex; this ADR is the spec, and the migration steps below
+  are the implementation.
+
+== Implementation steps
+
+. Fork wasmex → `hyperpolymath/wasmex`, branch `snif-wasmtime-patched`: bump
+  `wasmtime*` to ≥ `42.0.2` in `native/wasmex/Cargo.toml`, set
+  `default-features = false, features = ["cranelift"]`, drop the WASI deps, and
+  fix any wasmtime 41→43 API breakage in wasmex's Rust.
+. `demo/mix.exs`: `{:wasmex, github: "hyperpolymath/wasmex", branch:
+  "snif-wasmtime-patched", force_build: true}`.
+. Add a CI gate: advisory scan of the built `Cargo.lock` must show no wasmtime in
+  a vulnerable range (fail the build otherwise).
+. Re-run `demo` tests + the metamorphic/pool suites against the new host.
+
+== References
+
+- ADR 0005 — Rust wasm32 guest + verifier (freestanding, no-WASI guest).
+- ADR 0004 — fuel-metered liveness guard.
+- GHSA-xx5w-cvp6-jv83, GHSA-jhxm-h53p-jm7w (wasmtime aarch64 sandbox escapes).
