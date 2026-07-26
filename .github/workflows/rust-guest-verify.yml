@@ -12,6 +12,7 @@ on:
     paths: ["rust/**", ".github/workflows/rust-guest-verify.yml"]
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
