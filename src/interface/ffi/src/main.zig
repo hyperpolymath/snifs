@@ -6,7 +6,7 @@
 // ╚════════════════════════════════════════════════════════════════════════════╝
 //
 // This file is the generic rsr-template C-FFI example (note the unreplaced
-// `{{PROJECT}}` / `{{project}}` placeholders — it does not compile as-is). It has
+// `SNIFS` / `{{project}}` placeholders — it does not compile as-is). It has
 // NOTHING to do with SNIF: it models a host-side init/free/handle C library, not
 // the SNIF guest. It is intentionally NOT rendered, because filling the
 // placeholders would manufacture a PHANTOM second FFI surface that contradicts the
@@ -29,7 +29,7 @@
 // Kept (not deleted) as the untouched rsr-template baseline for the src/interface/
 // scaffold tree; see PROOF-STATUS.md ("Scaffold (NOT counted, NOT gated)").
 // ----------------------------------------------------------------------------
-// {{PROJECT}} FFI Implementation (rsr-template example — see banner above)
+// SNIFS FFI Implementation (rsr-template example — see banner above)
 //
 // This module implements the C-compatible FFI declared in src/abi/Foreign.idr
 // All types and layouts must match the Idris2 ABI definitions.
@@ -39,7 +39,7 @@ const std = @import("std");
 
 // Version information (keep in sync with project)
 const VERSION = "0.1.0";
-const BUILD_INFO = "{{PROJECT}} built with Zig " ++ @import("builtin").zig_version_string;
+const BUILD_INFO = "SNIFS built with Zig " ++ @import("builtin").zig_version_string;
 
 /// Thread-local error storage
 threadlocal var last_error: ?[]const u8 = null;

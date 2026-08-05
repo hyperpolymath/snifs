@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
 // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-= {{PROJECT_NAME}} Container Templates
+= Snifs Container Templates
 :toc: left
 :toclevels: 3
 :sectnums:

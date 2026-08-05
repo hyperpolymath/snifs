@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
 // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 = TOPOLOGY.md — Generation Guide
-{{AUTHOR}} (hyperpolymath) <{{AUTHOR_EMAIL}}>
+Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 :toc:
 :sectnums:
 
@@ -153,4 +153,4 @@ _structured data_ for tooling. Both should agree.
 
 == Copyright
 
-Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} (hyperpolymath) <{{AUTHOR_EMAIL}}>
+Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>

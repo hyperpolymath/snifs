@@ -80,3 +80,20 @@ This repository is **bootstrapped** (not a template). It contains no
 4. Use canonical session commands through `session/dispatch.sh` or Just aliases.
 5. Do not claim files/paths/recipes exist unless verified in this repository
    (`just --list` for recipes).
+
+<!-- BEGIN requires-initialisation -->
+
+## PRIORITY ACTION — this repository is not fully initialised
+
+16 substitution token(s) still have no value. **Read
+`REQUIRES_INITIALISATION.md` in the repository root before doing anything
+else here** — it lists every outstanding token, what it means, and which
+files it belongs in.
+
+Do not fabricate values for them, and do not delete the sections that
+contain them to quiet a gate. They are unfilled because they need a
+decision, not because they were overlooked. Resolve what you legitimately
+can, leave the rest, and delete `REQUIRES_INITIALISATION.md` only when
+nothing outstanding remains.
+
+<!-- END requires-initialisation -->

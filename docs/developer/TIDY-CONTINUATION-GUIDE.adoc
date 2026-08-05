@@ -80,7 +80,7 @@ WP-2 done. WP-3 (CLADE clade-prefix) *dropped by owner decision* — leave the
 * `docs/QUICKSTART.adoc` (dup of the root `QUICKSTART-*.adoc` trio) → delete.
 * `.machine_readable/ai/PLACEHOLDERS.adoc` (the init recipe says `rm` it) → delete.
 * `docs/RSR_OUTLINE.adoc` (pure template doc) → delete or rewrite as a snifs outline.
-* `READINESS.md` → `READINESS.adoc` (convert + fill `{{DATE}}` + snif→snifs).
+* `READINESS.md` → `READINESS.adoc` (convert + fill `2026-08-05` + snif→snifs).
 
 *Open decisions (get from owner before executing):* D-a (keep/remove bootstrap
 tooling: `scripts/validate-template.sh`, `setup.sh`, self-validating `k9` examples),

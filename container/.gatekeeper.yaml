@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 // Owner: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 #
-# Svalinn gatekeeper policy for {{PROJECT_NAME}}
+# Svalinn gatekeeper policy for Snifs
 #
 # Controls which operations are permitted through the edge gateway.
 # This template provides moderate security defaults — not wide-open test
