@@ -35,6 +35,7 @@ on:
       - '.github/workflows/proofs.yml'
   workflow_dispatch:
 permissions: read-all
+  actions: read
 concurrency:
   group: proofs-${{ github.ref }}
   cancel-in-progress: true
