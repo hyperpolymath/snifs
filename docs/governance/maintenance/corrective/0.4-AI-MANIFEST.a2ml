@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: MPL-2.0
+---
+### [META]
+id: "governance-unit-corrective"
+level: 4
+parent: "../0.3-AI-MANIFEST.a2ml"
+
+---
+### [AI_MANIFEST]
+description: |
+  TSDM corrective unit within the Maintenance axis.
