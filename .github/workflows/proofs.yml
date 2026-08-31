@@ -48,9 +48,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
-      - name: Install Nix (Determinate installer)
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix \
             | sh -s -- install --no-confirm
 
       - name: Check Idris2 + Lean4 proofs (fail-on-skip, real invocation)
@@ -67,9 +65,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
-      - name: Install Nix (Determinate installer)
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix \
             | sh -s -- install --no-confirm
 
       - name: Build wasm guests + check ABI signatures vs the verified Idris2 model
