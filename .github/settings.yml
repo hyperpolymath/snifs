@@ -7,13 +7,13 @@
 # applied by the probot/settings app when changes are pushed to the default
 # branch. Install the app at: https://github.com/apps/settings
 #
-# Template file — replace snif and {{DESCRIPTION}} with actual values.
+# Template file — replace snif and SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing with actual values.
 
 # ─── Repository Settings ───────────────────────────────────────────────────────
 
 repository:
   name: "snifs"
-  description: "{{DESCRIPTION}}"
+  description: "SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing"
   homepage: "https://github.com/hyperpolymath/snifs"
   private: false
   has_issues: true
