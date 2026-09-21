@@ -1,3 +1,4 @@
+# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
@@ -46,10 +47,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        uses: actions/checkout@v4.3.1
 
       - name: Install Zig 0.15.1
-        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406  # v2.2.1
+        uses: goto-bus-stop/setup-zig@v2.2.1
         with:
           version: 0.15.1
 
@@ -68,7 +69,7 @@ jobs:
           ls -la priv/*.wasm
 
       - name: Install Erlang/Elixir
-        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        uses: erlef/setup-beam@v1.24.0
         with:
           # OTP 28.3 + Elixir 1.19.4 matches what the rest of the estate
           # uses (bofj-kitt static-analysis-gate verified working). The
