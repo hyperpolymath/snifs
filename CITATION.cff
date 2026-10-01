@@ -1,4 +1,5 @@
 cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
 title: "SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly Sandboxing"
 authors:
   - family-names: Jewell
