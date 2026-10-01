@@ -3,6 +3,7 @@ title: "SNIFs: Safer Native Implemented Functions for the BEAM via WebAssembly S
 authors:
   - family-names: Jewell
     given-names: Jonathan D. A.
+    orcid: "https://orcid.org/0000-0002-3078-6652"
     affiliation: The Open University
 doi: 10.5281/zenodo.19520245
 version: v1
