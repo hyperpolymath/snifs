@@ -15,7 +15,7 @@
 #  path, or `cd` into bag and pass an absolute path.)
 #
 # `required_cap: "nix"` routes each check to a node that has the `nix` capability;
-# the commands fetch the actual toolchain (idris2/lean4/agda/zig/wasm-tools/python/just)
+# the commands fetch the actual toolchain (idris2/lean4/agda/zig/wasm-tools/bun/just)
 # via `nix shell` at run time. `github_context` is the required-status-check NAME the
 # verdict posts to — point branch-protection's required contexts at these.
 [
@@ -34,7 +34,7 @@
     command: [
       "bash",
       "-lc",
-      "nix shell nixpkgs#zig nixpkgs#wasm-tools nixpkgs#python3 nixpkgs#just --command bash -c 'just abi-conformance'"
+      "nix shell nixpkgs#zig nixpkgs#wasm-tools nixpkgs#bun nixpkgs#just --command bash -c 'just abi-conformance'"
     ],
     required_cap: "nix",
     github_context: "bag / ABI conformance (owned compute)"

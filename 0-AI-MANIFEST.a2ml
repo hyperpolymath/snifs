@@ -68,7 +68,7 @@ This repository is **bootstrapped** (not a template). It contains no
 - `zig/src/safe_nif.zig` (the SNIF kernel — trapped failure modes)
 - `demo/` (Mix project: wasmex loader + ExUnit crash-isolation suite)
 - `verification/proofs/` (Idris2 / Lean4 / Agda proof artifacts)
-- `verification/tools/abi_conformance.py` (model↔binary ABI drift gate)
+- `verification/tools/abi_conformance.js` (model↔binary ABI drift gate)
 - `session/README.adoc` (session-binding usage)
 - `.machine_readable/` (machine-readable repo policy/state + contractiles)
 

@@ -327,7 +327,7 @@ a framework today
 
 |ABI-7 |◐ *Coverage 15 of 20 — buffer_abi DONE 2026-06-16.* `+safe_nif+`
 (8, `+Foreign.idr+`) + `+buffer_abi+` (7, `+BufferAbi.idr+`, incl. 3
-void returns) are modelled+gated, both in the `+abi_conformance.py+`
+void returns) are modelled+gated, both in the `+abi_conformance.js+`
 guest manifest. *Remaining (ledgered):* `+zig/src/burble_fft.zig+` (5 —
 `+fft+`/`+ifft+`/… use `+(ptr,len)+` slice marshalling = ABI-6, and it
 is not built into any artifact) + the Rust buffer guest |ABI |Idris2 +
@@ -386,7 +386,7 @@ operationally (`+run-deniable+`/`+fault-via-observe+` +
 front-end (`+PreExecWitness+`), F5 non-trivial-`+Alive+` recovery
 witness (`+PartialAlive+`) — all mutation-confirmed load-bearing by a
 4-skeptic re-audit. ABI-7: `+buffer_abi+` modelled+gated
-(`+BufferAbi.idr+`, 15/20 sites); guest-aware `+abi_conformance.py+`;
+(`+BufferAbi.idr+`, 15/20 sites); guest-aware `+abi_conformance.js+`;
 CI-1 conformance job added; GAP-1b scalar metamorphic gate (found the
 `+checked_add+` misnomer, then made it genuinely checked — overflow
 traps). |Claude Opus 4.8 (1M context)

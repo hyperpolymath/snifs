@@ -1518,7 +1518,7 @@ abi-conformance:
         exit 1
     fi
     # No arg => check EVERY guest in the manifest (safe_nif + buffer_abi).
-    python3 verification/tools/abi_conformance.py
+    bun verification/tools/abi_conformance.js
 
 # Show proof status summary
 proof-status:
@@ -1642,7 +1642,7 @@ test-demo: build-wasm
 # (i.e. if the silent-corruption anti-property was never exercised).
 eval: build-wasm
     @echo "=== SNIF evaluation (wasmtime CLI; OTP-25-safe) ==="
-    RUNS=${RUNS:-30} benches/snif_eval.sh | tee priv/snif_eval.json | benches/assert_safer.py
+    RUNS=${RUNS:-30} benches/snif_eval.sh | tee priv/snif_eval.json | bun benches/assert_safer.js
 
 # Just the JSON (no assertions) — for dashboards / regression diffing.
 eval-json: build-wasm

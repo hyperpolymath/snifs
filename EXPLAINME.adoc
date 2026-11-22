@@ -76,7 +76,7 @@ ambition lives in groove/cleave, not here.
 | `demo/test/snif_demo_test.exs` | Integration tests verifying BEAM survival across every crash mode.
 | `verification/proofs/agda/SnifIsolation.agda` | SEC-1 operational crash-isolation, proven-modulo-explicit-TCB.
 | `verification/proofs/agda/SnifVerdict.agda` | Residue-clean (deniability) + non-forgery at the boundary.
-| `verification/tools/abi_conformance.py` | Model↔binary ABI drift gate (interface-level).
+| `verification/tools/abi_conformance.js` | Model↔binary ABI drift gate (interface-level).
 |===
 
 == Dogfooded Across The Account

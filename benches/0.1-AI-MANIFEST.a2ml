@@ -12,7 +12,7 @@ description: |
   ReleaseSafe-vs-ReleaseFast comparison and the metamorphic eval.
 
 canonical_locations:
-  safety_assertion: "assert_safer.py"
+  safety_assertion: "assert_safer.js"
   eval_driver: "snif_eval.sh"
   template_bench: "template_bench.sh"
 
