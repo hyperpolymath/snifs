@@ -331,7 +331,7 @@ void returns) are modelled+gated, both in the `+abi_conformance.jl+`
 guest manifest. *Remaining (ledgered):* `+zig/src/burble_fft.zig+` (5 —
 `+fft+`/`+ifft+`/… use `+(ptr,len)+` slice marshalling = ABI-6, and it
 is not built into any artifact) + the Rust buffer guest |ABI |Idris2 +
-Python |Buffer guest closed; FFT + Rust pending the multi-language
+Julia |Buffer guest closed; FFT + Rust pending the multi-language
 buffer-ABI gate
 
 |GAP-1b |◐ *Behaviour faithfulness — scalar kernels DONE 2026-06-16.*

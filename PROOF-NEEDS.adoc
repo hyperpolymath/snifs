@@ -108,7 +108,7 @@ Gated |`+verification/proofs/agda/SnifVerdict.agda+`
 Framework only |`+Compliance.WasmArray*+`
 
 |ABI-7 |Coverage: model + gate every real guest export |ABI |Idris2 +
-Python |◐ buffer_abi done (15/20 Zig sites); burble_fft + Rust guests
+Julia |◐ buffer_abi done (15/20 Zig sites); burble_fft + Rust guests
 ledgered |`+verification/proofs/idris2/ABI/BufferAbi.idr+`,
 `+verification/tools/abi_conformance.jl+`
 

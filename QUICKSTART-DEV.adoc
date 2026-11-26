@@ -51,6 +51,7 @@ cd demo && mix deps.get && mix test    # 21/21 ExUnit crash-isolation suite
 ----
 just proof-check-all      # Idris2 ABI + Lean4 API + Agda SEC-1 + dangerous-pattern scan
 just abi-conformance      # model ↔ shipped-binary ABI drift gate (required check)
+# (the gate and `just eval` run Julia scripts: install Julia 1.11+ first, e.g. `nix shell nixpkgs#julia-bin`)
 just proof-status         # summary of proven / tested / trusted
 ----
 
