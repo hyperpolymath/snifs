@@ -74,5 +74,5 @@ jobs:
           # Zig 0.15+ is required (matches the repo toolchain + the safe_nif/buffer_abi build
           # flags). The recipe builds both guests, then the multi-guest conformance tool fails
           # on any export-signature drift from Foreign.idr / BufferAbi.idr.
-          nix shell nixpkgs#zig nixpkgs#wasm-tools nixpkgs#bun nixpkgs#just \
+          nix shell nixpkgs#zig nixpkgs#wasm-tools nixpkgs#julia-bin nixpkgs#just \
             --command bash -c 'just abi-conformance'

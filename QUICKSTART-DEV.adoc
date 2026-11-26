@@ -64,7 +64,7 @@ snifs/
 ├── rust/ , rust-guest/        # Rust→wasm32 guests (dual-sourced; see Dustfile)
 ├── demo/                      # Mix project: wasmex loader + ExUnit suite
 ├── verification/proofs/       # Idris2 / Lean4 / Agda proof artifacts
-├── verification/tools/        # abi_conformance.js and friends
+├── verification/tools/        # abi_conformance.jl and friends
 ├── benches/                   # benchmark harness
 ├── docs/                      # paper, ADRs, proof/tech-debt ledgers
 ├── .machine_readable/         # 6a2 checkpoint files + load-bearing contractiles

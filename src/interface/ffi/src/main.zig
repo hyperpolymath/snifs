@@ -24,7 +24,7 @@
 // THE REAL SNIF GUEST ABI lives in:
 //   * Implementation : zig/src/safe_nif.zig, zig/src/buffer_abi.zig (wasm32-freestanding)
 //   * Verified model : verification/proofs/idris2/ABI/{Foreign,BufferAbi,Layout,...}.idr
-//   * Drift gate      : verification/tools/abi_conformance.js  (`just abi-conformance`)
+//   * Drift gate      : verification/tools/abi_conformance.jl  (`just abi-conformance`)
 //
 // Kept (not deleted) as the untouched rsr-template baseline for the src/interface/
 // scaffold tree; see PROOF-STATUS.md ("Scaffold (NOT counted, NOT gated)").

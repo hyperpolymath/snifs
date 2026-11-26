@@ -110,7 +110,7 @@ Framework only |`+Compliance.WasmArray*+`
 |ABI-7 |Coverage: model + gate every real guest export |ABI |Idris2 +
 Python |◐ buffer_abi done (15/20 Zig sites); burble_fft + Rust guests
 ledgered |`+verification/proofs/idris2/ABI/BufferAbi.idr+`,
-`+verification/tools/abi_conformance.js+`
+`+verification/tools/abi_conformance.jl+`
 
 |GAP-1b |Behaviour faithfulness: metamorphic relations prove kernels
 _behave_ as modelled, not just match signatures |TP |metamorphic tests
@@ -185,7 +185,7 @@ verification/proofs/
 │                    # Properties.agda is unrendered rsr-template SCAFFOLD (NOT gated)
 ├── coq/             # SEC-1-TCB slot (WasmCert-Coq); current file is SCAFFOLD
 └── tlaplus/         # unused scaffold
-verification/tools/abi_conformance.js   # the gap-1 interface drift gate
+verification/tools/abi_conformance.jl   # the gap-1 interface drift gate
 demo/test/snif_metamorphic_test.exs     # GAP-1b behaviour gate
 ....
 
