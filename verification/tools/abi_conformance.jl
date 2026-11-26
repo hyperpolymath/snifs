@@ -63,39 +63,128 @@ err(s) = println(stderr, s)
 #
 # `single`: `<ctor> "name" [T,..] Ret`        -> results = [Ret]
 # `multi` : `<ctor> "name" [T,..] [R,..]`      -> results = [R,..]   ([] = void)
+#
+# The whole file is matched (not line by line), so a binding wrapped across lines
+# still parses. Every `<ctor> "` use is counted and compared with what was recovered:
+# a declared spec that cannot be parsed is an error, never silently dropped (a dropped
+# spec would let the gate pass without checking that export).
 function parse_model(file, ctor, fmt)
     spec = fmt == "single" ?
         Regex("$ctor\\s+\"([^\"]+)\"\\s+\\[([^\\]]*)\\]\\s+(\\w+)") :
         Regex("$ctor\\s+\"([^\"]+)\"\\s+\\[([^\\]]*)\\]\\s+\\[([^\\]]*)\\]")
+    text = read(file, String)
+    declared = length(collect(eachmatch(Regex("$ctor\\s+\""), text)))
     model = Dict{String,Tuple{Vector{String},Vector{String}}}()
-    for line in split(read(file, String), "\n")
-        occursin("constructor", line) && continue # skip the record's constructor declaration line
-        m = match(spec, line)
-        m === nothing && continue
+    for m in eachmatch(spec, text)
         params = ty.(csv(m.captures[2]))
         results = fmt == "single" ? [ty(strip(m.captures[3]))] : ty.(csv(m.captures[3]))
         model[m.captures[1]] = (params, results)
     end
+    if length(model) != declared
+        error("$(basename(file)): $declared `$ctor` spec(s) declared but only " *
+              "$(length(model)) parsed (continuation or format not understood)")
+    end
     return model
 end
 
-# Built .wasm -> (Dict(export_name => func_symbol), Dict(func_symbol => (params, results))).
+# Read the balanced "(...)" group starting at text[i] == '('. Returns (inner, next_index).
+function paren_group(text, i)
+    depth = 0
+    j = i
+    while j <= lastindex(text)
+        c = text[j]
+        if c == '('
+            depth += 1
+        elseif c == ')'
+            depth -= 1
+            depth == 0 && return text[nextind(text, i):prevind(text, j)], nextind(text, j)
+        end
+        j = nextind(text, j)
+    end
+    error("unbalanced parentheses in wasm-tools output")
+end
+
+# Value types of one "(param ...)" / "(result ...)" group body; `$name` tokens dropped.
+valtypes(body) = filter(w -> !startswith(w, "\$"), words(body))
+
+# Parse consecutive "(type X)" / "(param ..)" / "(result ..)" groups from text[i:].
+# Returns (typeref or nothing, params, results).
+function parse_sig_groups(text, i)
+    tref = nothing
+    params = String[]
+    results = String[]
+    while true
+        m = match(r"\G\s*\(", text, i)
+        m === nothing && break
+        open = m.offset + length(m.match) - 1
+        body, nxt = paren_group(text, open)
+        head, _, rest = partition(strip(body), r"\s")
+        if head == "param"
+            append!(params, valtypes(rest))
+        elseif head == "result"
+            append!(results, valtypes(rest))
+        elseif head == "type"
+            tref = strip(rest)
+        else
+            break
+        end
+        i = nxt
+    end
+    return tref, params, results
+end
+
+# `partition` for a regex separator (Base only has string/char separators).
+function partition(s, sep::Regex)
+    m = match(sep, s)
+    m === nothing && return s, "", ""
+    return s[1:prevind(s, m.offset)], m.match, s[m.offset + length(m.match):end]
+end
+
+# Built .wasm -> (Dict(export_name => function key), Dict(function key => (params, results))).
+#
+# Functions are keyed by their numeric index, so exports that print as `(func 3)` (no
+# debug names) and `(func $sym)` both resolve. A function's signature comes from its
+# `(type X)` reference when it has one (looked up in the type section), else from its
+# inline param/result groups. A signature that cannot be decoded is an error, never void.
 function parse_wasm(file)
     wat = try
         read(`wasm-tools print $file`, String)
     catch e
         error("wasm-tools print failed: $(sprint(showerror, e))")
     end
-    exports = Dict{String,String}()
-    for m in eachmatch(r"\(export \"([^\"]+)\" \(func \$([^)\s]+)\)\)", wat)
-        exports[m.captures[1]] = m.captures[2]
+
+    # Type section: key by index and by $name.
+    types = Dict{String,Tuple{Vector{String},Vector{String}}}()
+    for m in eachmatch(r"\(type (?:(\$\S+) )?\(;(\d+);\)\s*\(func\b", wat)
+        _, params, results = parse_sig_groups(wat, m.offset + length(m.match))
+        sig = (params, results)
+        types[m.captures[2]] = sig
+        m.captures[1] === nothing || (types[m.captures[1]] = sig)
     end
+
+    # Function definitions (the first occurrence of an index wins; imports print the same way).
     funcsig = Dict{String,Tuple{Vector{String},Vector{String}}}()
-    fdef = r"\(func \$(\S+) \(;\d+;\)(?: \(type \d+\))?(?: \(param ([^)]*)\))?(?: \(result ([^)]*)\))?"
-    for m in eachmatch(fdef, wat)
-        haskey(funcsig, m.captures[1]) && continue # first (the real def) wins
-        funcsig[m.captures[1]] = (m.captures[2] === nothing ? String[] : words(m.captures[2]),
-                                  m.captures[3] === nothing ? String[] : words(m.captures[3]))
+    byname = Dict{String,String}()
+    for m in eachmatch(r"\(func (?:(\$\S+) )?\(;(\d+);\)", wat)
+        idx = m.captures[2]
+        m.captures[1] === nothing || (byname[m.captures[1]] = idx)
+        haskey(funcsig, idx) && continue
+        tref, params, results = parse_sig_groups(wat, m.offset + length(m.match))
+        if tref !== nothing
+            haskey(types, tref) ||
+                error("function $idx references unknown type $tref; cannot decode signature")
+            funcsig[idx] = types[tref]
+        else
+            funcsig[idx] = (params, results)
+        end
+    end
+
+    exports = Dict{String,String}()
+    for m in eachmatch(r"\(export \"([^\"]+)\" \(func (\$[^)\s]+|\d+)\)\)", wat)
+        ref = m.captures[2]
+        key = startswith(ref, "\$") ? get(byname, ref, nothing) : ref
+        key === nothing && error("export $(m.captures[1]) -> $ref has no matching function definition")
+        exports[m.captures[1]] = key
     end
     return exports, funcsig
 end
@@ -130,7 +219,7 @@ function check_guest(name, wasm, model_path, ctor, fmt)
         end
         sig = get(funcsig, sym, nothing)
         if sig === nothing
-            push!(fails, "$fname: export -> \$$sym but no func definition found")
+            push!(fails, "$fname: export -> func $sym but no func definition found")
             continue
         end
         aparams, aresults = sig
