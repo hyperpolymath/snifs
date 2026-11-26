@@ -2,7 +2,6 @@
 # Language runtimes
 rust = "latest"
 zig = "latest"
-bun = "latest"
 denojs = "latest"
 
 # Package managers
@@ -32,7 +31,17 @@ gnu-grep = "latest"
 # Task runner alias
 [alias]
 task = "go-task"
-build = "cargo build --release"
-test = "cargo test"
-lint = "bun install --frozen-lockfile && bunx --no-install --bun prettier --check ."
-fmt = "bun install --frozen-lockfile && bunx --no-install --bun prettier --write ."
+
+# Runnable tasks (mise reads [alias] as tool aliases, not commands).
+# Prettier runs through Deno (npm: specifier), the estate-approved runtime.
+[tasks.build]
+run = "cargo build --release"
+
+[tasks.test]
+run = "cargo test"
+
+[tasks.lint]
+run = "deno run --allow-read --allow-env npm:prettier@3.10.1 --check ."
+
+[tasks.fmt]
+run = "deno run --allow-read --allow-write --allow-env npm:prettier@3.10.1 --write ."
