@@ -43,7 +43,7 @@ The snifs Bustfile in two disjoint halves.
 
 ### wasmex-nif-guest-load-failure
 - description: The host-side wasmex NIF, or the `.wasm` guest it loads, fails to instantiate — a missing/renamed export, ABI/version skew between the Idris2-verified model and the real Zig exports, wrong wasm target, or a NIF that won't link into the BEAM. The Elixir call surfaces `{:error, _}` (or a NIF load crash) instead of a working SNIF.
-- cause: the guest export set drifted from the verified ABI (`verification/proofs/idris2/ABI/*`), or the guest was built for the wrong target / missing an export, so wasmex cannot bind the expected interface at instantiation — boundary-erosion / ABI-drift, exactly the class `abi_conformance.py` guards.
+- cause: the guest export set drifted from the verified ABI (`verification/proofs/idris2/ABI/*`), or the guest was built for the wrong target / missing an export, so wasmex cannot bind the expected interface at instantiation — boundary-erosion / ABI-drift, exactly the class `abi_conformance.jl` guards.
 - probe: just abi-conformance  # signature drift gate (safe_nif + buffer_abi vs Foreign.idr / BufferAbi.idr)
 - probe: cd demo && mix test    # host-side instantiate + call; must not be {:error, _} for the happy path
 - recovery: re-sync exports to the Idris2 ABI model (realign safe_nif.zig + buffer_abi.zig against Foreign.idr / BufferAbi.idr), rebuild for wasm32-freestanding, re-run `just abi-conformance` until green, then re-instantiate.

@@ -22,5 +22,3 @@
 # Inventory taken 2026-08-06 across all 424 estate repositories.
 # Files covered: 2 python
 
-cicd_rules/banned_language_file:benches/assert_safer.py
-cicd_rules/banned_language_file:verification/tools/abi_conformance.py

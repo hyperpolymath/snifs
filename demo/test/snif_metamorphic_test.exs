@@ -4,7 +4,7 @@ defmodule SnifMetamorphicTest do
   @moduledoc """
   GAP-1b — BEHAVIOUR faithfulness gate (the deeper half of model<->code).
 
-  The Idris2 ABI proofs + `abi_conformance.py` establish that the built wasm's
+  The Idris2 ABI proofs + `abi_conformance.jl` establish that the built wasm's
   SIGNATURES match the verified model. They do NOT establish that the code
   BEHAVES as a `fibonacci` / `checked_add` actually should. This gate closes a
   slice of that with dependency-free METAMORPHIC relations: properties that must

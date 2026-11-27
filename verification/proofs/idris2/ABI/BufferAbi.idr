@@ -11,7 +11,7 @@
 --
 -- Each spec records the WASM-level signature (i32/i64/f32/f64) of an export, exactly as it
 -- appears in the built `buffer_abi_ReleaseSafe.wasm`. The Python conformance gate
--- (verification/tools/abi_conformance.py, "buffer_abi" guest) parses these specs and FAILS if
+-- (verification/tools/abi_conformance.jl, "buffer_abi" guest) parses these specs and FAILS if
 -- the built artifact's real signatures drift from this verified model.
 --
 -- SCOPE (honest): like ABI.Foreign this verifies the INTERFACE (names, params, results), not
