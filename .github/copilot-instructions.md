@@ -37,7 +37,7 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 ## Banned Languages
 
 - No TypeScript (use ReScript)
-- No Node.js / npm / bun (use Deno)
+- No Node.js / yarn (use Bun; Deno, pnpm, npm as fallbacks)
 - No Go (use Rust)
 - No Python (use Julia or Rust)
 
