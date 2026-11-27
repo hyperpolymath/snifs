@@ -226,7 +226,7 @@ project/
 === Prohibited
 
 * Python outside `salt/` directory
-* TypeScript/JavaScript (use ReScript)
+* TypeScript/JavaScript (use AffineScript)
 * CUE (use Guile/Nickel)
 * `Dockerfile` (use `Containerfile`)
 * Node.js, yarn (use Bun first; Deno, pnpm, npm as fallbacks)
