@@ -8,6 +8,7 @@ bun = "1.4"
 pnpm = "latest"
 cargo = "latest"
 go-task = "latest"
+just = "latest"
 
 # Formatting & Linting
 shfmt = "latest"
@@ -34,10 +35,10 @@ task = "go-task"
 
 # Runnable tasks (mise reads [alias] as tool aliases, not commands).
 [tasks.build]
-run = "just build"
+run = "just build-wasm"
 
 [tasks.test]
-run = "just test"
+run = "just test-demo"
 
 [tasks.lint]
 run = "bun install --frozen-lockfile && bunx --no-install --bun prettier --check ."
