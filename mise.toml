@@ -2,7 +2,7 @@
 # Language runtimes
 rust = "latest"
 zig = "latest"
-denojs = "latest"
+bun = "1.4"
 
 # Package managers
 pnpm = "latest"
@@ -34,7 +34,13 @@ task = "go-task"
 
 # Runnable tasks (mise reads [alias] as tool aliases, not commands).
 [tasks.build]
-run = "cargo build --release"
+run = "just build"
 
 [tasks.test]
-run = "cargo test"
+run = "just test"
+
+[tasks.lint]
+run = "bun install --frozen-lockfile && bunx --no-install --bun prettier --check ."
+
+[tasks.fmt]
+run = "bun install --frozen-lockfile && bunx --no-install --bun prettier --write ."
